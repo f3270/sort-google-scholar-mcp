@@ -9,11 +9,11 @@ Lee la tarea definida en `./.claude/tasks/$ARGUMENTS` y desarrolla un plan integ
 ## Contexto
 - ID de la tarea: $ARGUMENTS
 - Ubicación de la tarea: `./.claude/tasks/$ARGUMENTS`
-- Archivo de salida: `./.claude/workplan/{task-id}/{workplan-id}.md`
-- Sistema de revisiones: `./.claude/workplan/{task-id}/{workplan-id}-rev-{X}.md`
+- Archivo de salida: `./.claude/workplans/{task-id}/{workplan-id}.md`
+- Sistema de revisiones: `./.claude/workplans/{task-id}/{workplan-id}-rev-{X}.md`
 
 **Ejemplo de nomenclatura:**
-- Tarea: `task-03-fix-retrieval.md` → Folder: `./.claude/workplan/task-03/`
+- Tarea: `task-03-fix-retrieval.md` → Folder: `./.claude/workplans/task-03/`
 - Workplan inicial: `task-03-workplan.md`
 - Revisión 1: `task-03-workplan-rev-1.md`
 - Revisión 2: `task-03-workplan-rev-2.md`
@@ -109,7 +109,7 @@ Este proyecto usa:
 - **REUTILIZAR**: Preferir patrones y componentes existentes en el proyecto
 
 ### Sistema de Revisiones
-- **Verificar si existe workplan**: Antes de crear, revisar `./.claude/workplan/{task-id}/`
+- **Verificar si existe workplan**: Antes de crear, revisar `./.claude/workplans/{task-id}/`
 - **Crear revisión si existe**: Usar formato `{workplan-id}-rev-{X}.md` (X incremental)
 - **Documentar cambios**: Cada revisión debe incluir sección "Historial de Revisiones" con:
   - Qué cambió respecto a la versión anterior
@@ -121,7 +121,7 @@ Este proyecto usa:
 - ¿Cambio de alcance, arquitectura, o requisitos? → Crear nueva revisión
 
 ### Persistencia del Plan
-- **Ubicación**: `./.claude/workplan/{task-id}/{workplan-id}.md`
+- **Ubicación**: `./.claude/workplans/{task-id}/{workplan-id}.md`
 - **Nomenclatura folder**: Solo el identificador (ej: `task-03`, no `task-03-fix-scbuffer`)
 - **Confirmar con usuario**: Antes de persistir el plan final
 
@@ -638,7 +638,7 @@ Funcionalidades core:
 ## Acciones Finales
 
 1. **Verificar si existe workplan previo**:
-   - Revisar `./.claude/workplan/{task-id}/`
+   - Revisar `./.claude/workplans/{task-id}/`
    - Si existe: Crear revisión con formato `{workplan-id}-rev-{X}.md`
    - Si no existe: Crear workplan inicial
 
@@ -647,12 +647,12 @@ Funcionalidades core:
    - Solicitar aprobación antes de persistir
 
 3. **Crear/actualizar el archivo del plan**:
-   - Ubicación: `./.claude/workplan/{task-id}/{workplan-id}.md` (o `-rev-{X}.md`)
+   - Ubicación: `./.claude/workplans/{task-id}/{workplan-id}.md` (o `-rev-{X}.md`)
    - Asegurar que folder `{task-id}` existe
 
 4. **Verificar persistencia**:
    - Confirmar que archivo se guardó correctamente
-   - Listar archivos en `./.claude/workplan/{task-id}/` para verificar
+   - Listar archivos en `./.claude/workplans/{task-id}/` para verificar
 
 5. **Proporcionar resumen**:
    - Resumen ejecutivo del plan
