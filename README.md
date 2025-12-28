@@ -16,13 +16,19 @@ https://github.com/user-attachments/assets/25de7bad-2a5d-4bcf-b486-faa1d7a29eb3
 
 ## Installation
 
-You can install `sortgs` directly using `pip`:
+**Option 1 (recommended for development): use `uv` for fast installs**
+```bash
+# from the repo root
+uv sync
 
+# run the CLI via uv
+uv run sortgs "your keyword"
+```
+
+**Option 2: via pip (PyPI)**
 ```bash
 pip install sortgs
 ```
-
-This will install the latest version of `sortgs` and its dependencies.
 
 ## Usage
 
@@ -129,10 +135,11 @@ Loading next 20 results
 ```
 
 ## Step-by-Step Installation
-1. Install Python 3 and its dependencies from **Requirements** (suggestion: use Ananconda https://www.anaconda.com/distribution/)
-2. In the terminal (or cmd if using Windows), run `pip install sortgs`
-3. Use the command `sortgs "your keyword"` (replace "your keyword" to any keyword that you'd like to search)
-4. A CSV file with the name `your_keyword.csv` should be created. 
+1. Install Python 3 (>=3.8).
+2. **Recommended:** From the repo, run `uv sync` to install dependencies into a local `.venv`.
+3. Run the CLI with `uv run sortgs "your keyword"` (replace `"your keyword"` as needed).
+4. Alternatively, install from PyPI with `pip install sortgs` and then run `sortgs "your keyword"`.
+5. A CSV file with the name `your_keyword.csv` should be created.
 
 If those steps are too complicated for you, send me an email with a list of keyworks that you'd like them ranked to: fernando [dot] wittmann [at] gmail [dot] com
 
@@ -194,12 +201,14 @@ This guide will walk you through the process of installing Docker, pulling the `
 
 
 ## Contributing
-We use `pytest` for our test suite. To run all tests, install pytest and run:
+We use `pytest` for our test suite. To run all tests:
 ```bash
-pip install pytest
+# from repo root
+uv run pytest
+
+# or, after a pip editable install:
 pytest
 ```
-or:
 ```bash
 python -m pytest
 ```
@@ -224,4 +233,3 @@ git remote set-head origin -a
 If you find this project helpful and would like to support its development, consider making a donation. Your support is greatly appreciated!
 
 [Donate via Wise](https://wise.com/pay/me/fernandow21)
-
