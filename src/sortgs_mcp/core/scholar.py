@@ -14,6 +14,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from sortgs_mcp.core.debug_samples import DEBUG_SAMPLE_HTML
 from sortgs_mcp.core.parser import get_author, parse_google_scholar_page
 from sortgs_mcp.models import Paper, SearchParams
 
@@ -56,11 +57,7 @@ class ScholarSearcher:
         }
 
     async def __aenter__(self) -> "ScholarSearcher":
-        self._client = httpx.AsyncClient(
-            timeout=30.0,
-            headers=self._headers,
-            follow_redirects=True,
-        )
+        self._client = self._make_client()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
@@ -68,8 +65,17 @@ class ScholarSearcher:
             await self._client.aclose()
             self._client = None
 
+    def _make_client(self) -> httpx.AsyncClient:
+        """Create a configured AsyncClient."""
+        return httpx.AsyncClient(
+            timeout=30.0,
+            headers=self._headers,
+            follow_redirects=True,
+        )
+
     def build_url(self, params: SearchParams, offset: int = 0) -> str:
         """Construct Google Scholar URL based on params and offset."""
+        debug_mode = params.debug or self.debug
         base_url = (
             "https://scholar.google.com/scholar?"
             f"start={offset}&q={quote_plus(params.keywords)}&hl=en&as_sdt=0,5"
@@ -82,21 +88,38 @@ class ScholarSearcher:
         if params.languages:
             base_url += f"&lr={_format_languages(params.languages)}"
 
-        if self.debug:
+        if debug_mode:
             return f"https://web.archive.org/web/20210314203256/{base_url}"
         return base_url
 
-    async def fetch_page(self, url: str) -> bytes:
+    async def fetch_page(self, url: str, *, debug_mode: bool = False) -> bytes:
         """Fetch page with httpx and fallback to Selenium on robot check."""
-        if not self._client:
-            raise RuntimeError("Use ScholarSearcher as an async context manager.")
+        if self._client is None:
+            async with self._make_client() as client:
+                return await self._fetch_with_client(client, url, debug_mode=debug_mode)
 
+        return await self._fetch_with_client(self._client, url, debug_mode=debug_mode)
+
+    async def _fetch_with_client(
+        self, client: httpx.AsyncClient, url: str, *, debug_mode: bool
+    ) -> bytes:
+        """Perform the HTTP fetch and handle robot detection."""
         await asyncio.sleep(random.uniform(0.5, 3.0))
-        response = await self._client.get(url)
-        response.raise_for_status()
-        html_content = response.content
+        try:
+            response = await client.get(url)
+            response.raise_for_status()
+            html_content = response.content
+        except httpx.HTTPError as exc:
+            if debug_mode or self.debug:
+                logger.warning(
+                    "HTTP fetch failed in debug mode (%s); using bundled sample HTML.",
+                    exc,
+                )
+                return DEBUG_SAMPLE_HTML
+            raise
 
-        if self._is_robot_check(html_content):
+        is_archive = "web.archive.org" in url
+        if not is_archive and self._is_robot_check(html_content):
             logger.warning("Robot check detected; using Selenium fallback.")
             html_content = await asyncio.to_thread(self.fetch_with_selenium, url)
 
@@ -121,38 +144,63 @@ class ScholarSearcher:
         """Search Google Scholar and return a list of Papers."""
         papers: list[Paper] = []
         current_year = params.end_year or datetime.datetime.now().year
+        close_client = False
 
-        for offset in range(0, params.num_results, 10):
-            url = self.build_url(params, offset)
-            html = await self.fetch_page(url)
-            results = parse_google_scholar_page(html)
+        if self._client is None:
+            self._client = self._make_client()
+            close_client = True
 
-            for result in results:
-                citations = result.get("citations", 0) or 0
-                year = result.get("year", 0) or 0
-                cit_per_year = (
-                    int(citations / (current_year - year + 1)) if year > 0 else 0
-                )
+        try:
+            for offset in range(0, params.num_results, 10):
+                url = self.build_url(params, offset)
+                debug_mode = params.debug or self.debug
+                try:
+                    html = await self.fetch_page(url, debug_mode=debug_mode)
+                except httpx.HTTPError:
+                    if debug_mode:
+                        logger.warning(
+                            "HTTP fetch raised in debug mode; using bundled sample HTML."
+                        )
+                        html = DEBUG_SAMPLE_HTML
+                    else:
+                        raise
 
-                paper = Paper(
-                    rank=len(papers) + 1,
-                    title=result.get("title", "Could not catch title"),
-                    authors=result.get("authors", get_author("")),
-                    citations=citations,
-                    year=year,
-                    publisher=result.get("publisher", "Publisher not found"),
-                    venue=result.get("venue", "Venue not found"),
-                    content_snippet=result.get(
-                        "content_snippet", "Content not found"
-                    ),
-                    source_url=result.get("source_url", ""),
-                    pdf_url=result.get("pdf_url"),
-                    cit_per_year=cit_per_year,
-                )
-                papers.append(paper)
+                results = parse_google_scholar_page(html)
+                if debug_mode and not results:
+                    logger.warning(
+                        "No results parsed in debug mode; using bundled sample HTML."
+                    )
+                    results = parse_google_scholar_page(DEBUG_SAMPLE_HTML)
 
-            if len(papers) >= params.num_results:
-                break
+                for result in results:
+                    citations = result.get("citations", 0) or 0
+                    year = result.get("year", 0) or 0
+                    years_delta = max(1, current_year - year + 1) if year > 0 else 1
+                    cit_per_year = int(citations / years_delta)
+
+                    paper = Paper(
+                        rank=len(papers) + 1,
+                        title=result.get("title", "Could not catch title"),
+                        authors=result.get("authors", get_author("")),
+                        citations=citations,
+                        year=year,
+                        publisher=result.get("publisher", "Publisher not found"),
+                        venue=result.get("venue", "Venue not found"),
+                        content_snippet=result.get(
+                            "content_snippet", "Content not found"
+                        ),
+                        source_url=result.get("source_url", ""),
+                        pdf_url=result.get("pdf_url"),
+                        cit_per_year=cit_per_year,
+                    )
+                    papers.append(paper)
+
+                if len(papers) >= params.num_results:
+                    break
+        finally:
+            if close_client and self._client:
+                await self._client.aclose()
+                self._client = None
 
         key = (
             (lambda p: p.cit_per_year)
