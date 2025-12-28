@@ -9,12 +9,13 @@ consumido por agentes de IA
 ```mermaid
 flowchart LR
 
-U(("User")) --> UQ 
-U --> |User keywords| GKW
-UQ --> GKW
+U(("User")) --> UQ{{"User Queries"}}
+U --> UKW{{"User keywords"}}
 
 subgraph MCP
 direction TB
+    UKW --> GKW
+    UQ --> GKW
     GKW["Generate Search Keywords"]
     GKW --> OKW["Optim GScholar Keywords (KW)"]
     OKW --> SGS
