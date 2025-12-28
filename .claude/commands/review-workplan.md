@@ -56,9 +56,7 @@ CONTEXTO DEL PROYECTO:
 - Arquitectura: Async/await patterns, session-based persistence, MCP tools integration
 
 WORKPLAN A REVISAR:
-Ruta: ./.claude/workplans/{task-id}/{workplan-filename}
-
-[CONTENIDO DEL WORKPLAN COMPLETO AQUÍ]
+Lee el archivo en: ./.claude/workplans/{task-id}/{workplan-filename}
 
 CRITERIOS DE REVISIÓN:
 
@@ -162,10 +160,12 @@ IMPORTANTE: Se específico, concreto y accionable. Cita números de sección del
 
 **Comando**:
 ```bash
-codex "{solicitud preparada en paso 2}"
+codex "Analiza el workplan en {path_to_workplan} para el proyecto sortgs-mcp [criterios de revisión del paso 2]"
 ```
 
-**Nota**: codex debe estar instalado y disponible en PATH. Si no está disponible, reportar error con instrucciones de instalación.
+**Nota**:
+- codex debe estar instalado y disponible en PATH. Si no está disponible, reportar error con instrucciones de instalación.
+- Se pasa solo el PATH del workplan a codex, que lo leerá por sí mismo (más eficiente que enviar contenido completo)
 
 **Manejo de Errores**:
 - Si codex no está instalado: Mensaje claro + link a instalación

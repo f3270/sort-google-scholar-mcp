@@ -14,9 +14,9 @@ Lee la tarea definida en `./.claude/tasks/$ARGUMENTS` y desarrolla un plan integ
 
 **Ejemplo de nomenclatura:**
 - Tarea: `task-03-fix-retrieval.md` → Folder: `./.claude/workplans/task-03/`
-- Workplan inicial: `task-03-workplan.md`
-- Revisión 1: `task-03-workplan-rev-1.md`
-- Revisión 2: `task-03-workplan-rev-2.md`
+- Workplan inicial: `workplan-task-03.md`
+- Revisión 1: `workplan-task-03-rev-1.md`
+- Revisión 2: `workplan-task-03-rev-2.md`
 
 ## Tu Rol
 Eres el Coordinador de Planificación que orquesta a especialistas en:
