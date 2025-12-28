@@ -30,8 +30,12 @@ class SessionManager:
         session_path.mkdir(parents=True, exist_ok=True)
         (session_path / "pdfs").mkdir(parents=True, exist_ok=True)
 
+        session.papers_count = len(session.papers)
+
         metadata_path = session_path / "metadata.json"
-        metadata_path.write_text(session.model_dump_json(indent=2))
+        metadata_path.write_text(
+            session.model_dump_json(indent=2, exclude_none=True, by_alias=False)
+        )
 
         if session.papers:
             df = pd.DataFrame([paper.model_dump() for paper in session.papers])
