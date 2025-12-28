@@ -10,35 +10,28 @@ sortgs is a Python CLI tool that scrapes and ranks Google Scholar publications b
 
 ### Installation
 ```bash
-# Install package in editable mode with dependencies
-pip install -e .
+# Recommended: sync deps and virtualenv with uv
+uv sync
 
-# Install with test dependencies
-pip install -e . pytest
+# Fallback: editable install with pip
+pip install -e .
 ```
 
 ### Running Tests
 ```bash
-# Run all tests
+uv run pytest
+# or
 pytest
-
-# Run tests with verbose output
-pytest -v
-
-# Run specific test file
-pytest tests/test_sortgs.py
 ```
 
 ### Running the CLI
 ```bash
-# Basic usage
-sortgs "keyword"
+uv run sortgs "keyword"
+uv run sortgs "machine learning" --nresults 100 --sortby "cit/year" --csvpath ./output
+uv run sortgs "machine learning" --debug --nresults 10  # uses web archive
 
-# With common options
-sortgs "machine learning" --nresults 100 --sortby "cit/year" --csvpath ./output
-
-# Debug mode (uses web archive, useful for testing)
-sortgs "machine learning" --debug --nresults 10
+# If installed via pip/uv globally, commands also work without `uv run`
+# sortgs "keyword"
 ```
 
 ## Architecture
