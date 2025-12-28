@@ -6,13 +6,30 @@ description='A Python tool to rank Google Scholar publications by citations.'
 readme = 'README.md'
 urls={github='https://github.com/WittmannF/sort-google-scholar'}
 dependencies=[
+    # Existing dependencies
     'beautifulsoup4',
     'matplotlib',
     'pandas',
     'requests',
     'selenium',
+    # New for MCP
+    'mcp>=1.2.0',
+    'anthropic',
+    'httpx',
+    'pydantic>=2.0',
+    'pydantic-settings',
+    'aiofiles',
+    'tenacity',
+    # RAG Stack
+    'chromadb',
+    'sentence-transformers',
+    'pymupdf',
+    'langchain-text-splitters',
 ]
-scripts = {sortgs='sortgs:main'}
+scripts = {
+    sortgs='sortgs:main',
+    'sortgs-mcp'='sortgs_mcp.server:main'
+}
 classifiers=[
     'Programming Language :: Python :: 3',
     'License :: OSI Approved :: MIT License',

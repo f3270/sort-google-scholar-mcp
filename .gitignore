@@ -1,4 +1,8 @@
 *.csv
+*.pdf
+
+# Project data directory
+data/
 
 ### Python ###
 
@@ -26,3 +30,5 @@ ipython_config.py
 *.egg-info
 dist
 buildtags
+*.swp
+tags
