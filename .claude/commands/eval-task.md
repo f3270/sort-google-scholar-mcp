@@ -23,8 +23,11 @@ Revisa el trabajo realizado contra el workplan más reciente y determina si el a
    - Hallazgos por tarea clave (ruta de archivo como referencia)
    - Huecos pendientes y riesgos
    - Checks sugeridos solo si el usuario los solicita
+   - Si el estado general es ✅, sugiere hacer commit de los cambios
+   - **No persistir** la evaluación; presentarla solo al usuario en la respuesta
 
 ## Reglas
 - No inventar evidencia: si no está en código o git, márcalo como faltante.
 - No ejecutes planes nuevos ni expandas alcance; solo evalúa contra el workplan.
 - KISS: informe breve, accionable, sin sobrecarga.
+ - No guardar ni crear archivos; la evaluación se entrega solo en el chat.

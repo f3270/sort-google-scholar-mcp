@@ -63,6 +63,7 @@ Eres el Coordinador de Planificación que orquesta a especialistas en:
    - Define casos de prueba principales
    - **GENERA SMOKE TEST CHECKLIST** manual para adjuntar al PR
    - **Contexto MCP + RAG**: Incluir validación de MCP tools, Google Scholar scraping, PDF processing, retrieval quality, y outputs del LLM
+   - **Incluir** un segmento que pida crear pruebas en `tests/__init__.py` para validar el trabajo hecho (mantener KISS)
 
 6. **Plan de Contingencia (simplificado)**
    - Qué recortar primero si falta tiempo
