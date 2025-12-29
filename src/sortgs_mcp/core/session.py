@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from sortgs_mcp.models import SearchParams, SearchSession
+from sortgs_mcp.models import Paper, SearchParams, SearchSession
 
 
 class SessionManager:
@@ -24,7 +24,7 @@ class SessionManager:
         (session_path / "pdfs").mkdir(parents=True, exist_ok=True)
         return session_id
 
-    def save_session(self, session: SearchSession) -> None:
+    def save_session(self, session: SearchSession, *, create_empty_csv: bool = True) -> None:
         """Persist session metadata and results to disk."""
         session_path = self.sessions_dir / session.session_id
         session_path.mkdir(parents=True, exist_ok=True)
@@ -37,9 +37,13 @@ class SessionManager:
             session.model_dump_json(indent=2, exclude_none=True, by_alias=False)
         )
 
+        csv_path = session_path / "results.csv"
         if session.papers:
             df = pd.DataFrame([paper.model_dump() for paper in session.papers])
-            csv_path = session_path / "results.csv"
+            df.to_csv(csv_path, index=False)
+        elif create_empty_csv:
+            columns = list(Paper.model_fields.keys())
+            df = pd.DataFrame(columns=columns)
             df.to_csv(csv_path, index=False)
 
     def load_session(self, session_id: str) -> SearchSession:

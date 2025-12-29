@@ -16,9 +16,9 @@ class Settings(BaseSettings):
     )
 
     # API Keys
-    anthropic_api_key: str = Field(
-        ...,
-        description="Anthropic API key for Claude integration",
+    anthropic_api_key: str | None = Field(
+        default=None,
+        description="Anthropic API key for Claude integration (optional for MCP server startup)",
     )
 
     # Data directories

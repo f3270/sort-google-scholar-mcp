@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from typing import Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class Paper(BaseModel):
@@ -53,6 +53,16 @@ class SearchParams(BaseModel):
     end_year: int | None = Field(None, ge=1900, le=2100, description="Filter papers up to this year")
     languages: list[str] | None = Field(None, description="Language filter codes (e.g., ['en', 'es'])")
     debug: bool = Field(default=False, description="Debug mode (uses web archive)")
+
+    @model_validator(mode="after")
+    def validate_year_range(self) -> "SearchParams":
+        """Ensure start_year is not greater than end_year when both are set."""
+        if self.start_year is not None and self.end_year is not None:
+            if self.start_year > self.end_year:
+                raise ValueError(
+                    f"start_year ({self.start_year}) must be <= end_year ({self.end_year})"
+                )
+        return self
 
     class Config:
         """Pydantic config."""
