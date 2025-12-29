@@ -38,7 +38,7 @@ Analiza el workplan más reciente de una tarea usando codex, genera propuestas d
 
 **Comando**:
 ```bash
-codex exec "Analiza el workplan en {path_to_workplan} para el proyecto sortgs-mcp [criterios de revisión del paso 2]"
+codex exec "Analiza el workplan en {path_to_workplan} [criterios de revisión del paso 2]"
 ```
 
 **Nota**:
