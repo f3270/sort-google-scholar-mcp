@@ -37,6 +37,8 @@ uv run pytest -vv
 uv run pytest tests/test_llm_keywords.py -v
 uv run pytest tests/test_tool_validation.py -v
 uv run pytest tests/test_sortgs.py -v
+uv run pytest tests/test_pdf_downloader.py -v
+uv run pytest tests/test_download_tool.py -v
 
 # Run specific test function
 uv run pytest tests/test_llm_keywords.py::test_parse_keyword_response_json -v
@@ -75,6 +77,15 @@ uv run pytest --disable-warnings
 - `test_tool_validation.py`: Tool input validation tests (3 tests)
   - Tests parameter validation for search keyword generation
   - Includes async function testing with `asyncio.run()`
+- `test_pdf_downloader.py`: PDF downloader unit tests
+  - Tests async PDF downloading with mocked HTTP responses
+  - Tests validation (magic bytes, content-type), error handling (404, HTML responses)
+  - Tests batch downloading with concurrency control
+  - Uses mock httpx.AsyncClient to avoid network calls
+- `test_download_tool.py`: MCP tool integration tests
+  - Tests the download_papers MCP tool with mocked downloader
+  - Tests session integration and metadata updates
+  - Tests parameter validation (paper_indices, max_papers)
 
 **Writing New Tests:**
 - Place tests in `tests/` directory with `test_*.py` naming convention
@@ -137,12 +148,18 @@ sortgs-mcp/
 │   │   └── sortgs.py        # Monolithic CLI script
 │   └── sortgs_mcp/          # MCP Server (refactored async architecture)
 │       ├── config.py        # Settings and configuration (Pydantic Settings)
-│       ├── models.py        # Data models (Paper, SearchParams, SearchSession)
+│       ├── models.py        # Data models (Paper, SearchParams, SearchSession, etc.)
 │       ├── server.py        # MCP server entry point
-│       └── core/
-│           ├── scholar.py   # ScholarSearcher (async Google Scholar scraping)
-│           ├── session.py   # SessionManager (JSON/CSV persistence)
-│           └── parser.py    # HTML parsing utilities (BeautifulSoup)
+│       ├── core/
+│       │   ├── scholar.py   # ScholarSearcher (async Google Scholar scraping)
+│       │   ├── session.py   # SessionManager (JSON/CSV persistence)
+│       │   └── parser.py    # HTML parsing utilities (BeautifulSoup)
+│       ├── pdf/
+│       │   ├── __init__.py  # Exports PDFDownloader
+│       │   └── downloader.py # Async PDF downloader with retry and validation
+│       └── tools/
+│           ├── search.py    # MCP tools for search and keyword generation
+│           └── download.py  # MCP tool for downloading papers
 ```
 
 ### MCP Server Components (sortgs_mcp)
@@ -151,6 +168,8 @@ sortgs-mcp/
 - `SearchParams`: Search configuration (keywords, num_results, sort_by, year range)
 - `Paper`: Publication metadata (title, author, citations, year, PDF link, etc.)
 - `SearchSession`: Persistent session with search params and results
+- `DownloadMetadata`: PDF download tracking (rank, title, file path, size, timestamp, status)
+- `PDFDownloadResult`: Batch download results (counts, paths, failed papers, metadata)
 
 **src/sortgs_mcp/core/scholar.py** - `ScholarSearcher` class (async):
 - `build_url()`: Constructs Google Scholar URLs with query parameters
@@ -173,19 +192,50 @@ sortgs-mcp/
 - Environment variable support (.env file)
 - Default paths for data storage and sessions
 
+**src/sortgs_mcp/pdf/downloader.py** - `PDFDownloader` class (async):
+- `download_single()`: Downloads a single PDF with retry logic (3 attempts, exponential backoff)
+- `download_batch()`: Downloads multiple PDFs with concurrency control (configurable limit)
+- `_fetch_pdf()`: HTTP fetch with retry using tenacity (handles timeouts, HTTP errors)
+- `_is_valid_pdf_header()`: Validates PDF magic bytes (%PDF) in file header
+- `sanitize_filename()`: Creates safe filenames from paper titles
+- Context manager support for proper httpx.AsyncClient lifecycle
+- Skips existing valid PDFs unless force_redownload=True
+
+**src/sortgs_mcp/tools/download.py** - MCP tool for downloading papers:
+- `@mcp.tool() download_papers()`: Downloads PDFs for papers from a saved session
+- Parameters: session_id (required), paper_indices (optional list), max_papers (default 10)
+- Loads session, filters papers with PDF URLs, downloads in parallel
+- Updates session metadata with download statistics
+- Returns PDFDownloadResult with counts (downloaded/skipped/failed) and paths
+
 **Scraping Strategy**:
 1. First attempts async fetch with httpx (fast, lightweight)
 2. If robot check detected (CAPTCHA), falls back to Selenium WebDriver
 3. Selenium driver runs in thread pool (`asyncio.to_thread()`)
 4. Manual CAPTCHA solving: pauses execution and waits for user input
 
-**Data Flow (MCP)**:
+**Data Flow (MCP Search)**:
 1. Build Google Scholar URL with query parameters (keyword, year range, language filter)
 2. Fetch pages in batches of 10 results (Google Scholar pagination) via async iteration
 3. Parse HTML with BeautifulSoup to extract: Title, Author, Citations, Year, Publisher, Venue, Content snippet, Source link, PDF link
 4. Calculate citations per year: `Citations / (current_year - Year + 1)` if Year > 0
 5. Create session and persist as JSON + CSV
 6. Return session_id to MCP client
+
+**Data Flow (PDF Download)**:
+1. Load session by session_id and filter papers with PDF URLs
+2. Apply optional paper_indices filter and max_papers limit
+3. For each paper, create sanitized filename (rank + title)
+4. Create PDF directory: `data/sessions/{session_id}/pdfs/`
+5. Download PDFs concurrently with semaphore-controlled parallelism
+6. For each download:
+   - Check if valid PDF already exists (skip if yes, unless force_redownload)
+   - Fetch with retry (3 attempts, exponential backoff 2-10s)
+   - Validate Content-Type header and PDF magic bytes (%PDF)
+   - Write to disk with async file I/O
+   - Track metadata (path, size, timestamp, status)
+7. Update session with download counts and metadata
+8. Return PDFDownloadResult with statistics and file paths
 
 ### Legacy CLI (sortgs)
 
@@ -197,19 +247,23 @@ sortgs-mcp/
 
 ### Testing
 
-Tests use pytest fixtures that run the CLI via `os.system()` in debug mode (uses web archive to avoid actual Google Scholar requests). Tests verify:
-- Correct number of results returned
-- Proper sorting by citations and cit/year
-- Data accuracy against known archived results
-- CSV file creation and structure
-- PDF link extraction
+Tests use pytest fixtures and mocking to avoid external dependencies:
+- **Legacy CLI tests** (`test_sortgs.py`): Run CLI via `os.system()` in debug mode using web.archive.org
+- **MCP Server tests**: Mock HTTP clients and file I/O to avoid network calls and filesystem side effects
+- **Search tests** verify: Result count, sorting, CSV creation, data accuracy, PDF link extraction
+- **PDF download tests** verify: Async downloading, retry logic, validation (magic bytes, content-type), error handling (404, HTML responses, timeouts), batch operations with concurrency control
+- **Tool tests** verify: MCP tool integration, session management, parameter validation
 
 ### Key Constraints
 
-- Google Scholar rate limiting: Tool adds random delays (0.5-3s) between requests to avoid blocks
-- CAPTCHA handling: When detected, Selenium WebDriver pauses for manual solving
-- Debug mode: Uses web.archive.org snapshot from 2021 for deterministic testing
-- Filename length: CSV filenames are truncated to MAX_CSV_FNAME (255 chars)
+- **Google Scholar rate limiting**: Tool adds random delays (0.5-3s) between requests to avoid blocks
+- **CAPTCHA handling**: When detected, Selenium WebDriver pauses for manual solving
+- **Debug mode**: Uses web.archive.org snapshot from 2021 for deterministic testing
+- **Filename length**: CSV filenames are truncated to MAX_CSV_FNAME (255 chars)
+- **PDF download concurrency**: Limited by `max_concurrent_downloads` setting (default: 5) to avoid overwhelming servers
+- **PDF validation**: Both Content-Type header and magic bytes (%PDF) are checked; warning logged if Content-Type is missing/incorrect but magic bytes are valid
+- **Retry logic**: Downloads retry up to 3 times with exponential backoff (2-10s) for timeouts and HTTP errors
+- **Download timeout**: Each PDF download has a 30-second timeout (configurable)
 
 ### Dependencies
 
