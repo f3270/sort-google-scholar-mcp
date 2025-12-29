@@ -7,11 +7,13 @@ from sortgs_mcp.core.parser import (
     get_year,
     parse_google_scholar_page,
 )
-from sortgs_mcp.core.scholar import ScholarSearcher
+try:
+    from sortgs_mcp.core.scholar import ScholarSearcher
+except ModuleNotFoundError:
+    ScholarSearcher = None
 from sortgs_mcp.core.session import SessionManager
 
 __all__ = [
-    "ScholarSearcher",
     "SessionManager",
     "get_author",
     "get_citations",
@@ -19,3 +21,6 @@ __all__ = [
     "get_year",
     "parse_google_scholar_page",
 ]
+
+if ScholarSearcher is not None:
+    __all__.append("ScholarSearcher")

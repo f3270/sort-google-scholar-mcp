@@ -80,6 +80,37 @@ class SearchParams(BaseModel):
         }
 
 
+class DownloadMetadata(BaseModel):
+    """Metadata for a single downloaded PDF."""
+
+    rank: int = Field(..., description="Paper rank in search results")
+    title: str = Field(..., description="Paper title")
+    pdf_path: str = Field(..., description="Relative path to PDF file")
+    file_size_bytes: int = Field(..., description="PDF file size in bytes")
+    download_timestamp: datetime = Field(
+        default_factory=datetime.now,
+        description="When the PDF was downloaded",
+    )
+    status: Literal["downloaded", "skipped"] = Field(
+        default="downloaded",
+        description="Download status for the PDF",
+    )
+
+    class Config:
+        """Pydantic config."""
+
+        json_schema_extra = {
+            "example": {
+                "rank": 1,
+                "title": "Attention Is All You Need",
+                "pdf_path": "data/sessions/550e.../pdfs/paper_001_attention.pdf",
+                "file_size_bytes": 1234567,
+                "download_timestamp": "2025-12-29T16:15:00",
+                "status": "downloaded",
+            }
+        }
+
+
 class SearchSession(BaseModel):
     """Represents a complete search session with results."""
 
@@ -89,6 +120,10 @@ class SearchSession(BaseModel):
     papers: list[Paper] = Field(default_factory=list, description="Found papers")
     papers_count: int = Field(default=0, description="Total number of papers found")
     pdfs_downloaded: int = Field(default=0, description="Number of PDFs downloaded")
+    download_metadata: list[DownloadMetadata] = Field(
+        default_factory=list,
+        description="Metadata for downloaded PDFs",
+    )
     indexed: bool = Field(default=False, description="Whether papers have been indexed in vector DB")
 
     class Config:
@@ -116,9 +151,50 @@ class PDFDownloadResult(BaseModel):
 
     session_id: str = Field(..., description="Session ID")
     downloaded: int = Field(..., description="Number of successfully downloaded PDFs")
+    skipped: int = Field(default=0, description="Number of PDFs skipped due to existing valid files")
     failed: int = Field(..., description="Number of failed downloads")
     pdf_paths: list[str] = Field(default_factory=list, description="Paths to downloaded PDFs")
     failed_papers: list[dict] = Field(default_factory=list, description="Papers that failed to download")
+    download_metadata: list["DownloadMetadata"] = Field(
+        default_factory=list,
+        description="Detailed metadata for each downloaded PDF",
+    )
+    error: str | None = Field(
+        default=None,
+        description="Error message if batch operation failed before processing",
+    )
+
+    class Config:
+        """Pydantic config."""
+
+        json_schema_extra = {
+            "example": {
+                "session_id": "550e8400-e29b-41d4-a716-446655440000",
+                "downloaded": 8,
+                "skipped": 0,
+                "failed": 2,
+                "pdf_paths": [
+                    "data/sessions/550e.../pdfs/paper_001_attention.pdf",
+                    "data/sessions/550e.../pdfs/paper_002_bert.pdf",
+                ],
+                "failed_papers": [
+                    {"rank": 3, "title": "...", "reason": "403 Forbidden"}
+                ],
+                "download_metadata": [
+                    {
+                        "rank": 1,
+                        "title": "Attention Is All You Need",
+                        "pdf_path": "data/sessions/550e.../pdfs/paper_001_attention.pdf",
+                        "file_size_bytes": 1234567,
+                        "download_timestamp": "2025-12-29T16:15:00",
+                        "status": "downloaded",
+                    }
+                ],
+                "error": None,
+            }
+        }
+
+
 
 
 class IndexingResult(BaseModel):

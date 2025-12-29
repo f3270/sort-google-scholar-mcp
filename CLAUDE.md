@@ -8,7 +8,7 @@ sortgs-mcp is a Python project that provides:
 1. **sortgs**: Legacy CLI tool that scrapes and ranks Google Scholar publications by citation count
 2. **sortgs-mcp**: Modern MCP (Model Context Protocol) server with RAG capabilities for integration with Claude
 
-The project uses async/await patterns, persistent session management, and provides both a standalone CLI and an MCP server interface. When Google Scholar blocks requests with CAPTCHA, the tool falls back to Selenium WebDriver.
+The project uses async/await patterns, persistent session management, PDF downloading with concurrency control, and provides both a standalone CLI and an MCP server interface. When Google Scholar blocks requests with CAPTCHA, the tool falls back to Selenium WebDriver.
 
 ## Build and Development Commands
 

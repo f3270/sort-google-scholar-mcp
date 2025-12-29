@@ -37,6 +37,10 @@ class Settings(BaseSettings):
         """Directory for ChromaDB persistence."""
         return self.data_dir / "vectorstore"
 
+    def pdf_download_dir(self, session_id: str) -> Path:
+        """Directory for PDF downloads for a session."""
+        return self.sessions_dir / session_id / "pdfs"
+
     # Embedding configuration
     embedding_model: str = Field(
         default="all-mpnet-base-v2",
@@ -57,6 +61,8 @@ class Settings(BaseSettings):
     # PDF processing
     max_concurrent_downloads: int = Field(
         default=5,
+        ge=1,
+        le=20,
         description="Maximum concurrent PDF downloads",
     )
 

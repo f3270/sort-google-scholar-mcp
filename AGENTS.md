@@ -2,7 +2,8 @@
 
 ## Project Structure & Modules
 - Source lives in `src/sortgs/`; `sortgs.py` hosts the CLI, scraping, and CSV export logic.
-- Tests are in `tests/` and exercise the CLI against archived Scholar pages.
+- MCP server lives in `src/sortgs_mcp/` (tools, pdf, rag, core) with entrypoint in `src/sortgs_mcp/server.py`.
+- Tests are in `tests/` and exercise the CLI against archived Scholar pages plus MCP units.
 - Examples and helper scripts sit in `examples/` (e.g., `update_examples.py` updates demo CSVs).
 - Packaging metadata: `pyproject.toml`; environment setups: `requirements.txt`, `conda_environment.yml`.
 
@@ -10,7 +11,7 @@
 - Install in editable mode: `pip install -e .` (use Python ≥3.8).
 - Run the CLI locally: `sortgs "machine learning" --nresults 20 --csvpath ./out`.
 - Update demo CSVs: `python examples/update_examples.py`.
-- Test suite: `pytest -q`. Note: tests hit archived web pages; they still require network access.
+- Test suite: `pytest -q`. Note: CLI tests hit archived web pages (Wayback) and require network access.
 
 ## Coding Style & Naming
 - Follow PEP 8 with 4-space indentation; prefer f-strings and pathlib for paths.

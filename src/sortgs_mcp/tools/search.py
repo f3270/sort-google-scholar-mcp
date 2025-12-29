@@ -5,7 +5,6 @@ import logging
 import httpx
 
 from sortgs_mcp.config import settings
-from sortgs_mcp.core.scholar import ScholarSearcher
 from sortgs_mcp.core.session import SessionManager
 from sortgs_mcp.llm.openai import OpenAIClient
 from sortgs_mcp.models import SearchParams, SearchSession
@@ -47,6 +46,8 @@ async def search_papers(
 
         session_id = session_manager.create_session(params)
         logger.info("Created session", extra={"session_id": session_id})
+
+        from sortgs_mcp.core.scholar import ScholarSearcher
 
         async with ScholarSearcher(debug=debug) as searcher:
             papers = await searcher.search(params)

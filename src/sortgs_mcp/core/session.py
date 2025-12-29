@@ -4,7 +4,10 @@ import json
 import uuid
 from pathlib import Path
 
-import pandas as pd
+try:
+    import pandas as pd
+except Exception:
+    pd = None
 
 from sortgs_mcp.models import Paper, SearchParams, SearchSession
 
@@ -38,13 +41,23 @@ class SessionManager:
         )
 
         csv_path = session_path / "results.csv"
-        if session.papers:
-            df = pd.DataFrame([paper.model_dump() for paper in session.papers])
-            df.to_csv(csv_path, index=False)
-        elif create_empty_csv:
-            columns = list(Paper.model_fields.keys())
-            df = pd.DataFrame(columns=columns)
-            df.to_csv(csv_path, index=False)
+        if pd is not None:
+            if session.papers:
+                df = pd.DataFrame([paper.model_dump() for paper in session.papers])
+                df.to_csv(csv_path, index=False)
+            elif create_empty_csv:
+                columns = list(Paper.model_fields.keys())
+                df = pd.DataFrame(columns=columns)
+                df.to_csv(csv_path, index=False)
+        elif create_empty_csv or session.papers:
+            import csv
+
+            fieldnames = list(Paper.model_fields.keys())
+            with csv_path.open("w", newline="", encoding="utf-8") as handle:
+                writer = csv.DictWriter(handle, fieldnames=fieldnames)
+                writer.writeheader()
+                for paper in session.papers:
+                    writer.writerow(paper.model_dump())
 
     def load_session(self, session_id: str) -> SearchSession:
         """Load a session from disk."""
