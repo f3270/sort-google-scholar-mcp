@@ -12,7 +12,7 @@ dependencies = [
     "requests>=2.32.5",
     "selenium>=4.39.0",
     "mcp>=1.25.0",
-    "anthropic>=0.75.0",
+    "openai>=1.0.0",
     "httpx>=0.28.1",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.12.0",
@@ -34,3 +34,9 @@ sortgs-mcp = "sortgs_mcp.server:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+]

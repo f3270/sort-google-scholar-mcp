@@ -44,8 +44,8 @@ def main() -> None:
     from sortgs_mcp.tools import search  # noqa: F401  # Registers tools via decorators
 
     logger.info("Starting Sort Google Scholar MCP Server")
-    if settings.anthropic_api_key is None:
-        logger.warning("ANTHROPIC_API_KEY not set - LLM-based tools will not work")
+    if settings.openai_api_key is None:
+        logger.warning("OPENAI_API_KEY not set - LLM-based tools will not work")
     mcp.run(transport="stdio")
 
 

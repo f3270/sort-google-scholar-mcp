@@ -7,6 +7,7 @@ import httpx
 from sortgs_mcp.config import settings
 from sortgs_mcp.core.scholar import ScholarSearcher
 from sortgs_mcp.core.session import SessionManager
+from sortgs_mcp.llm.openai import OpenAIClient
 from sortgs_mcp.models import SearchParams, SearchSession
 from sortgs_mcp.server import mcp
 
@@ -77,3 +78,33 @@ async def search_papers(
     except Exception as exc:
         logger.error("Unexpected error in search_papers: %s", exc, exc_info=True)
         raise RuntimeError(f"Search failed: {exc}") from exc
+
+
+@mcp.tool()
+async def generate_search_keywords(query: str, num_variations: int = 3) -> dict:
+    """Generate optimized Google Scholar search keywords using OpenAI."""
+    if not query.strip():
+        raise ValueError("query must not be empty")
+
+    if not isinstance(num_variations, int) or not (1 <= num_variations <= 5):
+        raise ValueError("num_variations must be an integer between 1 and 5")
+
+    if not settings.openai_api_key:
+        raise RuntimeError(
+            "OPENAI_API_KEY not configured. "
+            "Please set it in .env file to use keyword generation."
+        )
+
+    logger.info(
+        "generate_search_keywords called",
+        extra={"query": query[:100], "num_variations": num_variations},
+    )
+
+    client = OpenAIClient(
+        api_key=settings.openai_api_key,
+        model=settings.openai_model_keywords,
+    )
+    keywords = await client.generate_keywords(query, num_variations)
+
+    logger.info("Generated %s keywords successfully", len(keywords))
+    return {"keywords": keywords}

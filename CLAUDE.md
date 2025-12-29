@@ -22,11 +22,94 @@ pip install -e .
 ```
 
 ### Running Tests
+
 ```bash
+# Run all tests (recommended)
 uv run pytest
-# or, without uv
-pytest
+
+# Run tests with verbose output (shows each test individually)
+uv run pytest -v
+
+# Run tests with detailed output (shows print statements and full tracebacks)
+uv run pytest -vv
+
+# Run specific test file
+uv run pytest tests/test_llm_keywords.py -v
+uv run pytest tests/test_tool_validation.py -v
+uv run pytest tests/test_sortgs.py -v
+
+# Run specific test function
+uv run pytest tests/test_llm_keywords.py::test_parse_keyword_response_json -v
+
+# Run tests matching a pattern
+uv run pytest -k "keyword" -v           # runs tests with "keyword" in name
+uv run pytest -k "not validation" -v    # excludes validation tests
+
+# Run tests and show warnings
+uv run pytest -v --tb=short
+
+# Run tests with coverage report (requires pytest-cov)
+uv run pytest --cov=sortgs_mcp --cov-report=html
+
+# Run tests in parallel (requires pytest-xdist)
+uv run pytest -n auto
+
+# Stop at first failure
+uv run pytest -x
+
+# Show local variables in tracebacks (useful for debugging)
+uv run pytest -l
+
+# Suppress warnings
+uv run pytest --disable-warnings
 ```
+
+**Test Categories:**
+- `test_sortgs.py`: Legacy CLI tests using debug mode with web.archive.org (9 tests)
+  - Tests result count, sorting, CSV creation, data accuracy, PDF links
+  - Uses fixtures that run CLI commands with `--debug --endyear 2022`
+  - Run time: ~37 seconds (due to CLI subprocess execution)
+- `test_llm_keywords.py`: LLM keyword parsing tests (5 tests)
+  - Tests JSON parsing, markdown-wrapped JSON, quoted strings, error handling
+  - Fast unit tests (~0.01s)
+- `test_tool_validation.py`: Tool input validation tests (3 tests)
+  - Tests parameter validation for search keyword generation
+  - Includes async function testing with `asyncio.run()`
+
+**Writing New Tests:**
+- Place tests in `tests/` directory with `test_*.py` naming convention
+- Use pytest fixtures for setup/teardown (see `test_sortgs.py` for examples)
+- For async code, use `asyncio.run()` or pytest-asyncio's `@pytest.mark.asyncio`
+- Mock external API calls (OpenAI, Google Scholar) to avoid rate limits
+- Use `tmp_path` fixture for temporary file operations
+- Follow existing patterns for consistency
+
+**Debugging Failed Tests:**
+```bash
+# Show full diff for assertion failures
+uv run pytest --tb=long
+
+# Drop into debugger on failure (requires ipdb or pdb)
+uv run pytest --pdb
+
+# Show stdout/stderr even for passing tests
+uv run pytest -s
+
+# Increase verbosity for more context
+uv run pytest -vvv
+
+# Run only last failed tests
+uv run pytest --lf
+
+# Run failed tests first, then others
+uv run pytest --ff
+```
+
+**Common Test Issues:**
+- Import errors: Ensure `uv sync` has been run to install the package
+- Missing pytest: Run `uv add --dev pytest pytest-asyncio`
+- Timeout errors: Increase timeout with `--timeout=300` (requires pytest-timeout)
+- Async test failures: Check that async functions use `asyncio.run()` or `@pytest.mark.asyncio`
 
 ### Running the Tools
 ```bash
@@ -36,7 +119,7 @@ uv run sortgs "machine learning" --nresults 100 --sortby "cit/year" --csvpath ./
 uv run sortgs "machine learning" --debug --nresults 10  # uses web archive
 
 # MCP Server
-uv run sortgs-mcp  # Starts the MCP server for Claude integration
+uv run sortgs-mcp  # Starts the MCP server for Claude Code integration
 
 # If installed via pip/uv globally, commands also work without `uv run`
 # sortgs "keyword"
@@ -138,13 +221,17 @@ Tests use pytest fixtures that run the CLI via `os.system()` in debug mode (uses
 - Web scraping: beautifulsoup4, requests, selenium, httpx
 - Data handling: pandas, matplotlib
 - MCP Server: mcp (Model Context Protocol SDK)
-- AI integration: anthropic (Claude API client)
+- AI integration: openai (OpenAI API client)
 - Models & validation: pydantic, pydantic-settings
 - RAG/Vector DB: chromadb, sentence-transformers, pymupdf, langchain-text-splitters
 - Async utilities: aiofiles, tenacity
 
+**Development Dependencies**:
+- Testing: pytest, pytest-asyncio
+- Optional: pytest-cov (coverage reports), pytest-xdist (parallel execution)
+
 **System Requirements**:
-- Python >=3.8
+- Python >=3.10 (updated from 3.8 for modern async features)
 - ChromeDriver installed and available in PATH (for Selenium fallback)
 - No API key needed for scraping (web scraping only)
-- Optional: Anthropic API key for Claude integration in MCP server
+- Optional: OpenAI API key for LLM integration in MCP server

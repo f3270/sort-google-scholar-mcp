@@ -24,7 +24,7 @@ subgraph MCP["MCP Server (sortgs_mcp)"]
 direction TB
     UKW --> GKW
     UQ --> GKW
-    GKW["Generate Search Keywords<br/>(LLM - Claude)"]
+    GKW["Generate Search Keywords<br/>(LLM - OpenAI)"]
     GKW --> OKW["Optimize GScholar Keywords"]
     OKW --> SGS
     subgraph SGS["Sort Google Scholar<br/>(Web Scraping)"]
@@ -37,7 +37,7 @@ direction TB
     CHUNK --> EMB["Embeddings<br/>(sentence-transformers)"]
     EMB --> R[(ChromaDB<br/>Vector Store)]
     UQ{{"User Queries"}} --> R
-    R --> LLM["Claude API<br/>(Answer Generation)"]
+    R --> LLM["OpenAI API<br/>(Answer Generation)"]
 end
 LLM --> O((Markdown Output<br/>with Citations))
 ```
@@ -71,7 +71,7 @@ LLM --> O((Markdown Output<br/>with Citations))
 | **MCP Framework** | `mcp` SDK oficial (v1.2+) | Stdio server para Claude Code |
 | **Async HTTP** | `httpx` | Reemplazo async de requests |
 | **Browser Automation** | `selenium` (mantener) | Fallback para CAPTCHA (no async viable) |
-| **LLM** | Anthropic Claude API | Keyword generation + RAG QA |
+| **LLM** | OpenAI API | Keyword generation + RAG QA |
 | **Vector DB** | ChromaDB (embedded) | Sin servidor, persistente, 100% local |
 | **Embeddings** | sentence-transformers | Local, sin API, modelo all-mpnet-base-v2 |
 | **PDF Parsing** | PyMuPDF (fitz) | Rápido, robusto para papers académicos |
@@ -102,7 +102,7 @@ sort-google-scholar-mcp/
 │       │
 │       ├── llm/                   # LLM integration
 │       │   ├── __init__.py
-│       │   ├── claude.py          # Async Claude client
+│       │   ├── openai.py          # Async OpenAI client
 │       │   └── keywords.py        # Keyword generation
 │       │
 │       ├── pdf/                   # PDF processing
@@ -139,7 +139,7 @@ sort-google-scholar-mcp/
 │   └── fixtures/
 │       └── sample.pdf
 │
-├── .env.example                   # ANTHROPIC_API_KEY
+├── .env.example                   # OPENAI_API_KEY
 ├── pyproject.toml                 # Updated deps
 └── README.md                      # Updated docs
 ```
@@ -150,7 +150,7 @@ El servidor MCP expondrá **6 herramientas** que los agentes de IA pueden invoca
 
 ### 1. `generate_search_keywords`
 
-**Descripción:** Genera variaciones de keywords optimizadas para Google Scholar usando Claude API.
+**Descripción:** Genera variaciones de keywords optimizadas para Google Scholar usando OpenAI API.
 
 **Input:**
 ```json
@@ -368,7 +368,7 @@ El servidor MCP expondrá **6 herramientas** que los agentes de IA pueden invoca
 ##### 1. Actualizar `pyproject.toml`
 - [ ] Añadir dependencias MCP:
   - `mcp>=1.2.0`
-  - `anthropic`
+  - `openai`
   - `httpx`
   - `pydantic>=2.0`
   - `pydantic-settings`
@@ -391,9 +391,9 @@ mkdir -p tests/fixtures
 
 ##### 3. Crear `src/sortgs_mcp/config.py`
 - [ ] Clase `Settings` con pydantic-settings
-- [ ] Campo `anthropic_api_key` (requerido)
+- [ ] Campo `openai_api_key` (requerido)
 - [ ] Campos `data_dir`, `sessions_dir`, `chroma_persist_dir` (paths)
-- [ ] Campos de configuración: `embedding_model`, `claude_model_keywords`, `claude_model_rag`
+- [ ] Campos de configuración: `embedding_model`, `openai_model_keywords`, `openai_model_rag`
 - [ ] Configuración PDF: `max_concurrent_downloads`, `chunk_size`, `chunk_overlap`
 - [ ] `log_level` configurable
 - [ ] Método `model_post_init` para crear directorios automáticamente
@@ -401,8 +401,8 @@ mkdir -p tests/fixtures
 
 ##### 4. Crear `.env.example`
 ```bash
-# Anthropic API Configuration
-ANTHROPIC_API_KEY=your_api_key_here
+# OpenAI API Configuration
+OPENAI_API_KEY=your_api_key_here
 
 # Optional overrides
 # DATA_DIR=./data
@@ -671,21 +671,21 @@ claude mcp add \
 
 ### **FASE 3: LLM Keyword Generation**
 ⏱️ **Duración:** 4-5 horas
-🎯 **Objetivo:** Generación inteligente de keywords con Claude API
+🎯 **Objetivo:** Generación inteligente de keywords con OpenAI API
 
 #### Tareas
 
-##### 1. Crear `src/sortgs_mcp/llm/claude.py`
-**Clase `ClaudeClient`:**
+##### 1. Crear `src/sortgs_mcp/llm/openai.py`
+**Clase `OpenAIClient`:**
 
 ```python
-from anthropic import AsyncAnthropic
+from openai import AsyncOpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential
 import logging
 
-class ClaudeClient:
-    def __init__(self, api_key: str, model: str = "claude-haiku-4-5-20250110"):
-        self.client = AsyncAnthropic(api_key=api_key)
+class OpenAIClient:
+    def __init__(self, api_key: str, model: str = "gpt-4o-mini"):
+        self.client = AsyncOpenAI(api_key=api_key)
         self.model = model
         self.logger = logging.getLogger(__name__)
 
@@ -709,14 +709,14 @@ class ClaudeClient:
 **Tareas:**
 - [ ] Método `generate_keywords`:
   - Construir prompt para keyword generation
-  - Llamar Claude API: `self.client.messages.create()`
+  - Llamar OpenAI API: `self.client.responses.create()`
   - Parsear respuesta (lista de keywords)
   - Validar que devuelve `num_variations` keywords
   - Logging de tokens usados
 
 - [ ] Retry logic con tenacity (3 intentos, exponential backoff)
 - [ ] Error handling (API errors, parsing errors)
-- [ ] Unit tests con mock de Anthropic client
+- [ ] Unit tests con mock de OpenAI client
 
 ##### 2. Crear `src/sortgs_mcp/llm/keywords.py`
 **Prompt template para keyword generation:**
@@ -749,7 +749,7 @@ def build_keyword_prompt(query: str, num_variations: int) -> str:
     )
 
 def parse_keyword_response(response: str) -> list[str]:
-    """Parse Claude's response to extract keywords list."""
+    """Parse OpenAI's response to extract keywords list."""
     import json
     import re
 
@@ -799,13 +799,13 @@ async def generate_search_keywords(
     Returns:
         Dictionary with "keywords" list
     """
-    from sortgs_mcp.llm.claude import ClaudeClient
+    from sortgs_mcp.llm.openai import OpenAIClient
     from sortgs_mcp.llm.keywords import build_keyword_prompt, parse_keyword_response
     from sortgs_mcp.config import settings
 
-    client = ClaudeClient(
-        api_key=settings.anthropic_api_key,
-        model=settings.claude_model_keywords
+    client = OpenAIClient(
+        api_key=settings.openai_api_key,
+        model=settings.openai_model_keywords
     )
 
     # Generate
@@ -822,14 +822,14 @@ async def generate_search_keywords(
 - [ ] Testing con MCP Inspector
 
 ##### 4. Testing
-- [ ] Unit tests para `ClaudeClient` (mock API)
+- [ ] Unit tests para `OpenAIClient` (mock API)
 - [ ] Unit tests para prompt building y parsing
 - [ ] Integration test con API real (pequeño)
 - [ ] Test en MCP Inspector
 - [ ] Test en Claude Code
 
 **Entregables:**
-- ✅ ClaudeClient con retry logic
+- ✅ OpenAIClient con retry logic
 - ✅ Sistema de prompts para keywords
 - ✅ Tool `generate_search_keywords` funcional
 - ✅ Tests unitarios y de integración
@@ -1399,7 +1399,7 @@ async def index_papers(
 
 #### Tareas
 
-##### 1. Actualizar `src/sortgs_mcp/llm/claude.py`
+##### 1. Actualizar `src/sortgs_mcp/llm/openai.py`
 Añadir método `generate_answer`:
 
 ```python
@@ -1435,16 +1435,18 @@ Instructions:
 
 Answer:"""
 
-    response = await self.client.messages.create(
+    response = await self.client.responses.create(
         model=self.model,
-        max_tokens=2000,
-        messages=[{"role": "user", "content": prompt}]
+        input=prompt,
+        max_output_tokens=2000,
     )
 
-    answer = response.content[0].text
+    answer = response.output_text
 
     self.logger.info(f"Generated answer ({len(answer)} chars)")
-    self.logger.debug(f"Tokens used: {response.usage.input_tokens} in, {response.usage.output_tokens} out")
+    self.logger.debug(
+        f"Tokens used: {response.usage.input_tokens} in, {response.usage.output_tokens} out"
+    )
 
     return answer
 ```
@@ -1462,7 +1464,7 @@ Answer:"""
 ```python
 from sortgs_mcp.rag.vectorstore import VectorStore
 from sortgs_mcp.rag.embeddings import EmbeddingService
-from sortgs_mcp.llm.claude import ClaudeClient
+from sortgs_mcp.llm.openai import OpenAIClient
 from sortgs_mcp.models import QueryResult, QuerySource
 import logging
 
@@ -1471,11 +1473,11 @@ class RAGRetriever:
         self,
         vectorstore: VectorStore,
         embedder: EmbeddingService,
-        claude_client: ClaudeClient
+        openai_client: OpenAIClient
     ):
         self.vectorstore = vectorstore
         self.embedder = embedder
-        self.claude = claude_client
+        self.openai = openai_client
         self.logger = logging.getLogger(__name__)
 
     async def answer_question(
@@ -1529,7 +1531,7 @@ class RAGRetriever:
 
         # 4. Generate answer
         self.logger.info("Generating answer with Claude")
-        answer = await self.claude.generate_answer(question, context)
+        answer = await self.openai.generate_answer(question, context)
 
         # 5. Format sources
         sources = []
@@ -1590,18 +1592,18 @@ async def query_papers(
     from sortgs_mcp.config import settings
     from sortgs_mcp.rag.vectorstore import VectorStore
     from sortgs_mcp.rag.embeddings import EmbeddingService
-    from sortgs_mcp.llm.claude import ClaudeClient
+    from sortgs_mcp.llm.openai import OpenAIClient
     from sortgs_mcp.rag.retriever import RAGRetriever
 
     # Initialize services
     vectorstore = VectorStore(settings.chroma_persist_dir)
     embedder = EmbeddingService(settings.embedding_model)
-    claude = ClaudeClient(
-        api_key=settings.anthropic_api_key,
-        model=settings.claude_model_rag
+    openai_client = OpenAIClient(
+        api_key=settings.openai_api_key,
+        model=settings.openai_model_rag
     )
 
-    retriever = RAGRetriever(vectorstore, embedder, claude)
+    retriever = RAGRetriever(vectorstore, embedder, openai_client)
 
     # Query
     result = await retriever.answer_question(
@@ -1710,8 +1712,8 @@ async def list_sessions() -> dict:
 - [ ] Test cross-session query
 - [ ] Test delete
 
-**`tests/test_claude_client.py`:**
-- [ ] Mock Anthropic API
+**`tests/test_openai_client.py`:**
+- [ ] Mock OpenAI API
 - [ ] Test keyword generation
 - [ ] Test answer generation
 - [ ] Test retry logic
@@ -1797,7 +1799,7 @@ Verificar:
 - [ ] PDF corrupto
 - [ ] Empty search results
 - [ ] ChromaDB connection issues
-- [ ] Claude API rate limit
+- [ ] OpenAI API rate limit
 - [ ] Invalid session ID
 
 **Entregables:**
@@ -1833,7 +1835,7 @@ pip install -e .
 ### Configuration
 
 1. Copy `.env.example` to `.env`
-2. Add your Anthropic API key
+2. Add your OpenAI API key
 
 ### Adding to Claude Code
 
@@ -2086,7 +2088,7 @@ pytest
 | **Async migration** | Incremental: mantener sync original, usar `asyncio.to_thread()` para Selenium |
 | **PDF parsing quality** | PyMuPDF robusto; aceptar imperfecciones (RAG tolera ruido) |
 | **ChromaDB performance** | Session-based collections, batch ops, HNSW tuning |
-| **Claude API costs** | Haiku para keywords, Sonnet para RAG, cache responses, limitar context |
+| **OpenAI API costs** | GPT-4o mini para keywords y RAG, cache responses, limitar context |
 | **CAPTCHA manual** | No compatible con MCP - error + instruir CLI legacy o manual solve |
 | **MCP debugging** | Logs a archivo, MCP Inspector, tests standalone |
 

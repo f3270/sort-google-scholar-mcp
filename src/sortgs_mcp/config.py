@@ -16,9 +16,9 @@ class Settings(BaseSettings):
     )
 
     # API Keys
-    anthropic_api_key: str | None = Field(
+    openai_api_key: str | None = Field(
         default=None,
-        description="Anthropic API key for Claude integration (optional for MCP server startup)",
+        description="OpenAI API key for LLM integration (optional for MCP server startup)",
     )
 
     # Data directories
@@ -44,14 +44,14 @@ class Settings(BaseSettings):
     )
 
     # LLM configuration
-    claude_model_keywords: str = Field(
-        default="claude-haiku-4-5-20250110",
-        description="Claude model for keyword generation (cheap/fast)",
+    openai_model_keywords: str = Field(
+        default="gpt-4o-mini",
+        description="OpenAI model for keyword generation (cheap/fast)",
     )
 
-    claude_model_rag: str = Field(
-        default="claude-sonnet-4-5-20250929",
-        description="Claude model for RAG question answering (quality)",
+    openai_model_rag: str = Field(
+        default="gpt-4o-mini",
+        description="OpenAI model for RAG question answering (quality)",
     )
 
     # PDF processing
