@@ -32,3 +32,4 @@ dist
 buildtags
 *.swp
 tags
+.coverage
