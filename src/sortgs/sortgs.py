@@ -16,24 +16,24 @@ a .csv file.
 
 """
 
-import requests
-import datetime
 import argparse
-from bs4 import BeautifulSoup
-import matplotlib.pyplot as plt
-import pandas as pd
-from time import sleep
+import datetime
+import logging
 import random
 import re
-import logging
 import sys
 from pathlib import Path
+from time import sleep
 
+import matplotlib.pyplot as plt
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 # Removed Python 2 compatibility for raw_input; using input() directly
 

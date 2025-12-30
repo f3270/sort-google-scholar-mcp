@@ -9,7 +9,6 @@ import pytest
 from sortgs_mcp.models import Paper
 from sortgs_mcp.pdf import parse_and_chunk_pdf
 
-
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
@@ -91,7 +90,9 @@ def test_async_compatibility():
     session_id = str(uuid.uuid4())
 
     async def run():
-        return await asyncio.to_thread(parse_and_chunk_pdf, pdf_path, make_paper(), session_id)
+        return await asyncio.to_thread(
+            parse_and_chunk_pdf, pdf_path, make_paper(), session_id
+        )
 
     chunks = asyncio.run(run())
     assert chunks

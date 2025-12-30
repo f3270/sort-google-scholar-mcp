@@ -6,11 +6,19 @@ import pytest
 
 from sortgs_mcp.config import settings
 from sortgs_mcp.core.session import SessionManager
-from sortgs_mcp.models import DownloadMetadata, PDFDownloadResult, Paper, SearchParams, SearchSession
+from sortgs_mcp.models import (
+    DownloadMetadata,
+    Paper,
+    PDFDownloadResult,
+    SearchParams,
+    SearchSession,
+)
 from sortgs_mcp.tools import download as download_tool
 
 
-def make_paper(rank: int, title: str, pdf_url: str | None = "https://example.com/paper.pdf") -> Paper:
+def make_paper(
+    rank: int, title: str, pdf_url: str | None = "https://example.com/paper.pdf"
+) -> Paper:
     return Paper(
         rank=rank,
         title=title,
@@ -40,7 +48,9 @@ def create_session(tmp_path: Path, papers: list[Paper]) -> tuple[str, SessionMan
 
 
 class FakeDownloader:
-    def __init__(self, result: PDFDownloadResult, max_concurrent: int | None = None) -> None:
+    def __init__(
+        self, result: PDFDownloadResult, max_concurrent: int | None = None
+    ) -> None:
         self.result = result
         self.max_concurrent = max_concurrent
         self.entered = False
@@ -54,7 +64,9 @@ class FakeDownloader:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         self.exited = True
 
-    async def download_batch(self, papers, pdf_dir, session_id, project_root=None, force_redownload=False):
+    async def download_batch(
+        self, papers, pdf_dir, session_id, project_root=None, force_redownload=False
+    ):
         self.batch_args = {
             "papers": papers,
             "pdf_dir": pdf_dir,
@@ -92,7 +104,9 @@ def test_download_papers_basic(tmp_path, monkeypatch):
     )
 
     fake_downloader = FakeDownloader(result, max_concurrent=2)
-    monkeypatch.setattr(download_tool, "PDFDownloader", lambda **kwargs: fake_downloader)
+    monkeypatch.setattr(
+        download_tool, "PDFDownloader", lambda **kwargs: fake_downloader
+    )
 
     response = asyncio.run(download_tool.download_papers(session_id, max_papers=2))
     assert response["downloaded"] == 1
@@ -143,7 +157,9 @@ def test_download_papers_max_papers_limit(tmp_path, monkeypatch):
         failed=0,
     )
     fake_downloader = FakeDownloader(result)
-    monkeypatch.setattr(download_tool, "PDFDownloader", lambda **kwargs: fake_downloader)
+    monkeypatch.setattr(
+        download_tool, "PDFDownloader", lambda **kwargs: fake_downloader
+    )
 
     asyncio.run(download_tool.download_papers(session_id, max_papers=2))
     assert fake_downloader.batch_args is not None
@@ -192,7 +208,9 @@ def test_download_papers_uses_context_manager(tmp_path, monkeypatch):
         failed=0,
     )
     fake_downloader = FakeDownloader(result)
-    monkeypatch.setattr(download_tool, "PDFDownloader", lambda **kwargs: fake_downloader)
+    monkeypatch.setattr(
+        download_tool, "PDFDownloader", lambda **kwargs: fake_downloader
+    )
 
     asyncio.run(download_tool.download_papers(session_id, max_papers=1))
     assert fake_downloader.entered is True

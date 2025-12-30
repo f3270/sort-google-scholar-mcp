@@ -5,7 +5,6 @@ import pytest
 from sortgs_mcp.pdf.parser import PDFParser
 from tests.fixtures.generate_fixtures import NORMAL_PAGE_COUNT, build_page_lines
 
-
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 

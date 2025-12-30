@@ -5,7 +5,11 @@ from pathlib import Path
 import pytest
 
 from sortgs_mcp.models import DownloadMetadata, Paper
-from sortgs_mcp.pdf.downloader import PDFDownloader, _normalize_pdf_path, sanitize_filename
+from sortgs_mcp.pdf.downloader import (
+    PDFDownloader,
+    _normalize_pdf_path,
+    sanitize_filename,
+)
 from tests.fixtures.pdf_responses import (
     mock_404_response,
     mock_html_response,
@@ -30,7 +34,9 @@ class MockAsyncClient:
         self.closed = True
 
 
-def make_paper(rank: int, title: str, pdf_url: str | None = "https://example.com/paper.pdf") -> Paper:
+def make_paper(
+    rank: int, title: str, pdf_url: str | None = "https://example.com/paper.pdf"
+) -> Paper:
     return Paper(
         rank=rank,
         title=title,
@@ -130,7 +136,9 @@ def test_download_single_http_error(tmp_path, mock_404_response):
     assert metadata is None
 
 
-def test_download_single_missing_content_type(tmp_path, mock_pdf_no_content_type, caplog):
+def test_download_single_missing_content_type(
+    tmp_path, mock_pdf_no_content_type, caplog
+):
     downloader = PDFDownloader(max_concurrent=1)
     downloader._client = MockAsyncClient([mock_pdf_no_content_type])
     paper = make_paper(1, "Paper One")
@@ -153,8 +161,14 @@ def test_download_single_missing_content_type(tmp_path, mock_pdf_no_content_type
 
 def test_download_batch_all_success(tmp_path, mock_pdf_response):
     downloader = PDFDownloader(max_concurrent=2)
-    downloader._client = MockAsyncClient([mock_pdf_response, mock_pdf_response, mock_pdf_response])
-    papers = [make_paper(1, "Paper One"), make_paper(2, "Paper Two"), make_paper(3, "Paper Three")]
+    downloader._client = MockAsyncClient(
+        [mock_pdf_response, mock_pdf_response, mock_pdf_response]
+    )
+    papers = [
+        make_paper(1, "Paper One"),
+        make_paper(2, "Paper Two"),
+        make_paper(3, "Paper Three"),
+    ]
 
     async def run():
         return await downloader.download_batch(
@@ -173,10 +187,18 @@ def test_download_batch_all_success(tmp_path, mock_pdf_response):
     assert all(not Path(path).is_absolute() for path in result.pdf_paths)
 
 
-def test_download_batch_mixed(tmp_path, mock_pdf_response, mock_404_response, mock_html_response):
+def test_download_batch_mixed(
+    tmp_path, mock_pdf_response, mock_404_response, mock_html_response
+):
     downloader = PDFDownloader(max_concurrent=2)
-    downloader._client = MockAsyncClient([mock_pdf_response, mock_404_response, mock_html_response])
-    papers = [make_paper(1, "Paper One"), make_paper(2, "Paper Two"), make_paper(3, "Paper Three")]
+    downloader._client = MockAsyncClient(
+        [mock_pdf_response, mock_404_response, mock_html_response]
+    )
+    papers = [
+        make_paper(1, "Paper One"),
+        make_paper(2, "Paper Two"),
+        make_paper(3, "Paper Three"),
+    ]
 
     async def run():
         return await downloader.download_batch(
@@ -198,7 +220,9 @@ def test_download_batch_semaphore(tmp_path):
     active = 0
     max_active = 0
 
-    async def fake_download_single(self, url, filepath, paper, project_root, *, force_redownload=False):
+    async def fake_download_single(
+        self, url, filepath, paper, project_root, *, force_redownload=False
+    ):
         nonlocal active, max_active
         active += 1
         max_active = max(max_active, active)

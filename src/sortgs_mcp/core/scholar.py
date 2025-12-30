@@ -136,7 +136,9 @@ class ScholarSearcher:
 
         body = driver.find_element(By.TAG_NAME, "body")
         if any(kw in body.text for kw in ROBOT_KW):
-            input("Solve CAPTCHA manually in the browser, then press Enter to continue...")
+            input(
+                "Solve CAPTCHA manually in the browser, then press Enter to continue..."
+            )
 
         return body.get_attribute("innerHTML").encode("utf-8")
 

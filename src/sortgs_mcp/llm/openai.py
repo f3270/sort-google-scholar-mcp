@@ -29,7 +29,9 @@ def _is_retryable_exception(exc: Exception) -> bool:
 class OpenAIClient:
     """Async client for OpenAI API with retry logic."""
 
-    def __init__(self, api_key: str, model: str = "gpt-4o-mini", timeout: float = 30.0) -> None:
+    def __init__(
+        self, api_key: str, model: str = "gpt-4o-mini", timeout: float = 30.0
+    ) -> None:
         self.client = AsyncOpenAI(api_key=api_key, timeout=timeout)
         self.model = model
 
@@ -64,7 +66,9 @@ class OpenAIClient:
 
     async def generate_answer(self, question: str, context: str) -> str:
         """Generate an answer from context (stub for Phase 7)."""
-        raise NotImplementedError("RAG answer generation will be implemented in Phase 7")
+        raise NotImplementedError(
+            "RAG answer generation will be implemented in Phase 7"
+        )
 
     def _log_usage(self, usage) -> None:
         if not usage:
@@ -74,7 +78,11 @@ class OpenAIClient:
         total_tokens = getattr(usage, "total_tokens", None)
         parts: Iterable[str] = (
             f"prompt_tokens={prompt_tokens}" if prompt_tokens is not None else None,
-            f"completion_tokens={completion_tokens}" if completion_tokens is not None else None,
+            (
+                f"completion_tokens={completion_tokens}"
+                if completion_tokens is not None
+                else None
+            ),
             f"total_tokens={total_tokens}" if total_tokens is not None else None,
         )
         message = ", ".join(part for part in parts if part)

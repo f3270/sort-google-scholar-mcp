@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from typing import Literal
+
 from pydantic import BaseModel, Field, model_validator
 
 
@@ -44,14 +45,22 @@ class SearchParams(BaseModel):
     """Parameters for a Google Scholar search."""
 
     keywords: str = Field(..., description="Search query keywords")
-    num_results: int = Field(default=100, ge=10, le=1000, description="Number of results to fetch")
+    num_results: int = Field(
+        default=100, ge=10, le=1000, description="Number of results to fetch"
+    )
     sort_by: Literal["Citations", "cit/year"] = Field(
         default="Citations",
         description="Column to sort results by",
     )
-    start_year: int | None = Field(None, ge=1900, le=2100, description="Filter papers from this year onwards")
-    end_year: int | None = Field(None, ge=1900, le=2100, description="Filter papers up to this year")
-    languages: list[str] | None = Field(None, description="Language filter codes (e.g., ['en', 'es'])")
+    start_year: int | None = Field(
+        None, ge=1900, le=2100, description="Filter papers from this year onwards"
+    )
+    end_year: int | None = Field(
+        None, ge=1900, le=2100, description="Filter papers up to this year"
+    )
+    languages: list[str] | None = Field(
+        None, description="Language filter codes (e.g., ['en', 'es'])"
+    )
     debug: bool = Field(default=False, description="Debug mode (uses web archive)")
 
     @model_validator(mode="after")
@@ -115,7 +124,9 @@ class SearchSession(BaseModel):
     """Represents a complete search session with results."""
 
     session_id: str = Field(..., description="Unique session identifier (UUID)")
-    created_at: datetime = Field(default_factory=datetime.now, description="Session creation timestamp")
+    created_at: datetime = Field(
+        default_factory=datetime.now, description="Session creation timestamp"
+    )
     params: SearchParams = Field(..., description="Search parameters used")
     papers: list[Paper] = Field(default_factory=list, description="Found papers")
     papers_count: int = Field(default=0, description="Total number of papers found")
@@ -124,7 +135,9 @@ class SearchSession(BaseModel):
         default_factory=list,
         description="Metadata for downloaded PDFs",
     )
-    indexed: bool = Field(default=False, description="Whether papers have been indexed in vector DB")
+    indexed: bool = Field(
+        default=False, description="Whether papers have been indexed in vector DB"
+    )
 
     class Config:
         """Pydantic config."""
@@ -151,10 +164,16 @@ class PDFDownloadResult(BaseModel):
 
     session_id: str = Field(..., description="Session ID")
     downloaded: int = Field(..., description="Number of successfully downloaded PDFs")
-    skipped: int = Field(default=0, description="Number of PDFs skipped due to existing valid files")
+    skipped: int = Field(
+        default=0, description="Number of PDFs skipped due to existing valid files"
+    )
     failed: int = Field(..., description="Number of failed downloads")
-    pdf_paths: list[str] = Field(default_factory=list, description="Paths to downloaded PDFs")
-    failed_papers: list[dict] = Field(default_factory=list, description="Papers that failed to download")
+    pdf_paths: list[str] = Field(
+        default_factory=list, description="Paths to downloaded PDFs"
+    )
+    failed_papers: list[dict] = Field(
+        default_factory=list, description="Papers that failed to download"
+    )
     download_metadata: list["DownloadMetadata"] = Field(
         default_factory=list,
         description="Detailed metadata for each downloaded PDF",
@@ -195,16 +214,20 @@ class PDFDownloadResult(BaseModel):
         }
 
 
-
-
 class IndexingResult(BaseModel):
     """Result of indexing operation."""
 
     session_id: str = Field(..., description="Session ID")
-    papers_indexed: int = Field(..., description="Number of papers successfully indexed")
+    papers_indexed: int = Field(
+        ..., description="Number of papers successfully indexed"
+    )
     chunks_created: int = Field(..., description="Total number of chunks created")
-    indexing_time_sec: float = Field(..., description="Time taken for indexing in seconds")
-    failed_papers: list[str] = Field(default_factory=list, description="Paper titles that failed to index")
+    indexing_time_sec: float = Field(
+        ..., description="Time taken for indexing in seconds"
+    )
+    failed_papers: list[str] = Field(
+        default_factory=list, description="Paper titles that failed to index"
+    )
 
 
 class QuerySource(BaseModel):
@@ -221,5 +244,7 @@ class QueryResult(BaseModel):
 
     question: str = Field(..., description="The question asked")
     answer: str = Field(..., description="Generated answer from RAG")
-    sources: list[QuerySource] = Field(default_factory=list, description="Source chunks used")
+    sources: list[QuerySource] = Field(
+        default_factory=list, description="Source chunks used"
+    )
     session_id: str | None = Field(None, description="Session ID if scoped")

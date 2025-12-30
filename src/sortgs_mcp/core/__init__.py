@@ -7,6 +7,7 @@ from sortgs_mcp.core.parser import (
     get_year,
     parse_google_scholar_page,
 )
+
 try:
     from sortgs_mcp.core.scholar import ScholarSearcher
 except ModuleNotFoundError:

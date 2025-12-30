@@ -1,6 +1,7 @@
 """HTML parsing utilities for Google Scholar results."""
 
 import re
+
 from bs4 import BeautifulSoup, Tag
 
 
@@ -132,7 +133,9 @@ def parse_google_scholar_page(html_content: bytes) -> list[dict]:
         # Extract content snippet
         try:
             content_div = div.find("div", {"class": "gs_rs"})
-            paper["content_snippet"] = content_div.text if content_div else "Content not found"
+            paper["content_snippet"] = (
+                content_div.text if content_div else "Content not found"
+            )
         except Exception:
             paper["content_snippet"] = "Content not found"
 

@@ -6,6 +6,7 @@ import sys
 try:
     from mcp.server.fastmcp import FastMCP
 except ModuleNotFoundError:
+
     class FastMCP:
         """Fallback MCP stub for environments without the mcp package."""
 
@@ -20,6 +21,7 @@ except ModuleNotFoundError:
 
         def run(self, *args, **kwargs) -> None:
             raise RuntimeError("mcp package is required to run the MCP server")
+
 
 from sortgs_mcp.config import settings
 
@@ -57,7 +59,9 @@ mcp = FastMCP("sortgs-mcp")
 
 def main() -> None:
     """Entry point for the MCP server."""
-    from sortgs_mcp.tools import download  # noqa: F401  # Registers tools via decorators
+    from sortgs_mcp.tools import (
+        download,
+    )  # noqa: F401  # Registers tools via decorators
     from sortgs_mcp.tools import search  # noqa: F401  # Registers tools via decorators
 
     logger.info("Starting Sort Google Scholar MCP Server")

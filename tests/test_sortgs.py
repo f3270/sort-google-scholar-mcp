@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+
 import pandas as pd
 import pytest
 
@@ -92,6 +93,6 @@ def test_top_5_titles(df_top_10_cli):
 def test_pdf_links(df_top_10_cli):
     assert "PDF" in df_top_10_cli.columns
     first_pdf = df_top_10_cli.PDF.values[0]
-    assert "9781107057135_foreword_pdf_1.pdf" in first_pdf, (
-        f"Expected PDF filename not found in: {first_pdf}"
-    )
+    assert (
+        "9781107057135_foreword_pdf_1.pdf" in first_pdf
+    ), f"Expected PDF filename not found in: {first_pdf}"

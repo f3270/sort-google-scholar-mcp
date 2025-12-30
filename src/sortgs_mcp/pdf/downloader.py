@@ -13,6 +13,7 @@ try:
     import aiofiles
     from aiofiles import ospath
 except ModuleNotFoundError:  # pragma: no cover - fallback for minimal test envs
+
     class _AsyncFile:
         def __init__(self, path: Path, mode: str) -> None:
             self._path = path
@@ -51,10 +52,15 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for minimal test envs
     aiofiles = _AiofilesModule()
     ospath = _OsPathModule()
 import httpx
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from sortgs_mcp.config import settings
-from sortgs_mcp.models import DownloadMetadata, PDFDownloadResult, Paper
+from sortgs_mcp.models import DownloadMetadata, Paper, PDFDownloadResult
 
 logger = logging.getLogger(__name__)
 
@@ -173,7 +179,9 @@ class PDFDownloader:
     ) -> tuple[str, str | None, DownloadMetadata | None]:
         """Download a single PDF and return status, error, and metadata."""
         if not force_redownload:
-            existing_metadata = await self._existing_pdf_metadata(filepath, paper, project_root)
+            existing_metadata = await self._existing_pdf_metadata(
+                filepath, paper, project_root
+            )
             if existing_metadata:
                 return "skipped", None, existing_metadata
 

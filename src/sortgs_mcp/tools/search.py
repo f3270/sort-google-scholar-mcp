@@ -32,7 +32,10 @@ async def search_papers(
         if not keywords.strip():
             raise ValueError("keywords must not be empty")
 
-        logger.info("search_papers called", extra={"keywords": keywords, "num_results": num_results})
+        logger.info(
+            "search_papers called",
+            extra={"keywords": keywords, "num_results": num_results},
+        )
 
         params = SearchParams(
             keywords=keywords,
@@ -59,7 +62,10 @@ async def search_papers(
             papers_count=len(papers),
         )
         session_manager.save_session(session, create_empty_csv=True)
-        logger.info("Session saved", extra={"session_id": session_id, "papers_found": len(papers)})
+        logger.info(
+            "Session saved",
+            extra={"session_id": session_id, "papers_found": len(papers)},
+        )
 
         top_5_titles = [paper.title for paper in papers[:5]]
         csv_path = str(settings.sessions_dir / session_id / "results.csv")
@@ -75,7 +81,9 @@ async def search_papers(
         raise ValueError(f"Invalid parameters: {exc}") from exc
     except httpx.HTTPError as exc:
         logger.error("HTTP error during search: %s", exc)
-        raise RuntimeError(f"Failed to fetch results from Google Scholar: {exc}") from exc
+        raise RuntimeError(
+            f"Failed to fetch results from Google Scholar: {exc}"
+        ) from exc
     except Exception as exc:
         logger.error("Unexpected error in search_papers: %s", exc, exc_info=True)
         raise RuntimeError(f"Search failed: {exc}") from exc

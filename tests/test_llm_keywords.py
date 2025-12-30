@@ -10,12 +10,18 @@ def test_parse_keyword_response_json():
 
 def test_parse_keyword_response_markdown_json():
     response = '```json\n["graph neural networks", "message passing"]\n```'
-    assert parse_keyword_response(response) == ["graph neural networks", "message passing"]
+    assert parse_keyword_response(response) == [
+        "graph neural networks",
+        "message passing",
+    ]
 
 
 def test_parse_keyword_response_quoted_fallback():
     response = 'Keywords: "transformers NLP", "attention mechanism"'
-    assert parse_keyword_response(response) == ["transformers NLP", "attention mechanism"]
+    assert parse_keyword_response(response) == [
+        "transformers NLP",
+        "attention mechanism",
+    ]
 
 
 def test_parse_keyword_response_malformed():

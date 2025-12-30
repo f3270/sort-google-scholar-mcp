@@ -2,7 +2,9 @@ import httpx
 import pytest
 
 
-def _make_response(status_code: int, content: bytes, headers: dict | None = None) -> httpx.Response:
+def _make_response(
+    status_code: int, content: bytes, headers: dict | None = None
+) -> httpx.Response:
     request = httpx.Request("GET", "https://example.com/paper.pdf")
     return httpx.Response(
         status_code=status_code,

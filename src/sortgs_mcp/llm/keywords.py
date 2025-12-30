@@ -38,7 +38,9 @@ def parse_keyword_response(response: str) -> list[str]:
     # Try 1: direct JSON list
     try:
         keywords = json.loads(response)
-        if isinstance(keywords, list) and all(isinstance(item, str) for item in keywords):
+        if isinstance(keywords, list) and all(
+            isinstance(item, str) for item in keywords
+        ):
             return keywords
     except json.JSONDecodeError:
         pass
@@ -48,7 +50,9 @@ def parse_keyword_response(response: str) -> list[str]:
     if match:
         try:
             keywords = json.loads(match.group(1))
-            if isinstance(keywords, list) and all(isinstance(item, str) for item in keywords):
+            if isinstance(keywords, list) and all(
+                isinstance(item, str) for item in keywords
+            ):
                 return keywords
         except json.JSONDecodeError:
             pass

@@ -27,7 +27,9 @@ class SessionManager:
         (session_path / "pdfs").mkdir(parents=True, exist_ok=True)
         return session_id
 
-    def save_session(self, session: SearchSession, *, create_empty_csv: bool = True) -> None:
+    def save_session(
+        self, session: SearchSession, *, create_empty_csv: bool = True
+    ) -> None:
         """Persist session metadata and results to disk."""
         session_path = self.sessions_dir / session.session_id
         session_path.mkdir(parents=True, exist_ok=True)

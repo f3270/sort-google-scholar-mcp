@@ -5,8 +5,8 @@ from pathlib import Path
 
 from sortgs_mcp.config import settings
 from sortgs_mcp.core.session import SessionManager
-from sortgs_mcp.pdf import PDFDownloader
 from sortgs_mcp.models import PDFDownloadResult
+from sortgs_mcp.pdf import PDFDownloader
 from sortgs_mcp.server import mcp
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,9 @@ async def download_papers(
     pdf_dir = settings.pdf_download_dir(session_id)
     project_root = Path.cwd()
 
-    async with PDFDownloader(max_concurrent=settings.max_concurrent_downloads) as downloader:
+    async with PDFDownloader(
+        max_concurrent=settings.max_concurrent_downloads
+    ) as downloader:
         result = await downloader.download_batch(
             papers_with_pdf,
             pdf_dir,

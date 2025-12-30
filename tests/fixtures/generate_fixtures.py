@@ -104,7 +104,9 @@ def _generate_with_minimal_pdf(pdf_path: Path, pages: list[list[str]]) -> None:
 
     for i, lines in enumerate(pages):
         stream = _build_content_stream(lines)
-        objects[content_start + i] = f"<< /Length {len(stream)} >>\nstream\n{stream}\nendstream"
+        objects[content_start + i] = (
+            f"<< /Length {len(stream)} >>\nstream\n{stream}\nendstream"
+        )
 
     result = bytearray()
     result.extend(b"%PDF-1.4\n")
@@ -132,7 +134,9 @@ def _generate_with_minimal_pdf(pdf_path: Path, pages: list[list[str]]) -> None:
 def generate_normal_pdf() -> Path:
     """Generate multi-page PDF with known content."""
     pdf_path = FIXTURES_DIR / "synthetic_normal.pdf"
-    pages = [build_page_lines(i + 1, NORMAL_PAGE_COUNT) for i in range(NORMAL_PAGE_COUNT)]
+    pages = [
+        build_page_lines(i + 1, NORMAL_PAGE_COUNT) for i in range(NORMAL_PAGE_COUNT)
+    ]
     try:
         _generate_with_reportlab(pdf_path, pages)
     except ModuleNotFoundError:
