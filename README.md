@@ -45,6 +45,18 @@ uv run sortgs-mcp
 - `query_papers`
 - `list_sessions`
 
+### Archive Workplans
+Use `archive_workplans.sh` to tar.gz a workplan folder and remove the original.
+Archives are always saved under `.claude/workplans/archives/`.
+
+```bash
+# Archive a workplan folder
+./archive_workplans.sh .claude/workplans/task-06
+
+# Optional custom archive name (still stored in .claude/workplans/archives/)
+./archive_workplans.sh .claude/workplans/task-06 task-06.tar.gz
+```
+
 ## Installation
 
 **Option 1 (recommended for development): use `uv` for fast installs**

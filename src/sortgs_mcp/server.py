@@ -59,10 +59,10 @@ mcp = FastMCP("sortgs-mcp")
 
 def main() -> None:
     """Entry point for the MCP server."""
+    from sortgs_mcp.tools import search  # noqa: F401  # Registers tools via decorators
     from sortgs_mcp.tools import (
         download,
     )  # noqa: F401  # Registers tools via decorators
-    from sortgs_mcp.tools import search  # noqa: F401  # Registers tools via decorators
 
     logger.info("Starting Sort Google Scholar MCP Server")
     if settings.openai_api_key is None:
