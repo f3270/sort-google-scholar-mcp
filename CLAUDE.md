@@ -10,6 +10,37 @@ sortgs-mcp is a Python project that provides:
 
 The project uses async/await patterns, persistent session management, PDF downloading with concurrency control, and provides both a standalone CLI and an MCP server interface. When Google Scholar blocks requests with CAPTCHA, the tool falls back to Selenium WebDriver.
 
+## Development Philosophy
+
+This project follows two core principles:
+
+1. **KISS (Keep It Simple, Stupid)**: Favor simplicity over complexity. Avoid over-engineering, premature abstractions, and unnecessary features. Code should be straightforward, readable, and solve the current problem without anticipating hypothetical future requirements.
+
+2. **TDD (Test-Driven Development)**: Write tests before implementation. All new features and bug fixes should:
+   - Start with a failing test that defines the expected behavior
+   - Implement the minimum code needed to make the test pass
+   - Refactor while keeping tests green
+   - Maintain high test coverage (aim for >80% coverage)
+   - Use mocking to isolate units and avoid external dependencies
+
+**TDD Workflow:**
+```bash
+# 1. Write a failing test
+uv run pytest tests/test_new_feature.py -v  # Should fail
+
+# 2. Implement the feature
+# ... write minimal code ...
+
+# 3. Run tests until they pass
+uv run pytest tests/test_new_feature.py -v  # Should pass
+
+# 4. Refactor if needed
+# ... improve code while keeping tests green ...
+
+# 5. Run full test suite
+uv run pytest  # All tests should pass
+```
+
 ## Build and Development Commands
 
 ### Installation
@@ -20,6 +51,8 @@ uv sync
 # Fallback: editable install with pip (if uv unavailable)
 pip install -e .
 ```
+Always use `uv run ...` for commands (including tests) so they run inside the
+project environment and do not touch the system Python.
 
 ### Running Tests
 

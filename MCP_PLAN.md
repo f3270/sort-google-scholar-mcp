@@ -1829,8 +1829,10 @@ Añadir secciones:
 ### Installation
 
 \```bash
-pip install -e .
+uv sync
 \```
+All commands (including tests) should use `uv run ...` to stay within the
+project environment and avoid touching the system Python.
 
 ### Configuration
 
@@ -2018,8 +2020,8 @@ Crear `CONTRIBUTING.md`:
 ## Development Setup
 
 \```bash
-pip install -e ".[dev]"
-pytest
+uv sync
+uv run pytest
 \```
 
 ## Running Tests

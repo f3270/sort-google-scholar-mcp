@@ -24,26 +24,74 @@ High-level flow:
 5. Index chunks in ChromaDB.
 6. Query the corpus with RAG.
 
-### MCP Server Setup (Quick)
+## MCP Server
+
+### Installation
 ```bash
 # Install dev deps
 uv sync
+```
+Use `uv run ...` for all commands (including tests) so they run inside the
+project environment and avoid touching the system Python.
 
-# Configure OpenAI (required for keyword generation and RAG)
-cp .env.example .env
-# edit .env to add OPENAI_API_KEY
+### Configuration
+1. Copy `.env.example` to `.env`.
+2. Add `OPENAI_API_KEY` (required for keyword generation and RAG queries).
+3. Optional overrides:
+   - `DATA_DIR` (default: `./data`)
+   - `LOG_LEVEL` (default: `INFO`)
 
-# Run MCP server
+### Run the MCP server
+```bash
 uv run sortgs-mcp
 ```
 
-### MCP Tools (Planned / In Progress)
-- `generate_search_keywords`
-- `search_papers`
-- `download_papers`
-- `index_papers`
-- `query_papers`
-- `list_sessions`
+### Add to Claude Code
+```bash
+claude mcp add --transport stdio sortgs-mcp -- python -m sortgs_mcp.server
+```
+
+You can also use the example config at `examples/mcp_config.json`.
+
+### MCP Tools
+
+1. `generate_search_keywords`
+   - Inputs: `query` (str), `num_variations` (int, default: 3)
+   - Output: `{"keywords": [...]}` (list of suggested keyword variants)
+
+2. `search_papers`
+   - Inputs: `keywords` (str), `num_results` (int), `sort_by` (str),
+     `start_year` (int | None), `end_year` (int | None), `languages` (list | None),
+     `debug` (bool)
+   - Output: session metadata including `session_id`, `papers_found`, `csv_path`
+
+3. `download_papers`
+   - Inputs: `session_id` (str), `paper_indices` (list[int] | None),
+     `max_papers` (int)
+   - Output: download summary with counts and `download_metadata`
+
+4. `index_papers`
+   - Inputs: `session_id` (str), `chunk_size` (int | None),
+     `chunk_overlap` (int | None), `max_chunks` (int | None)
+   - Output: indexing summary with `papers_indexed` and `chunks_created`
+
+5. `query_papers`
+   - Inputs: `question` (str), `session_id` (str), `top_k` (int)
+   - Output: answer + sources for the session
+
+6. `list_sessions`
+   - Inputs: none
+   - Output: list of saved sessions with metadata
+
+### Performance Notes
+- Search uses an `httpx.AsyncClient` context manager for connection pooling.
+- The embedding model is cached as a singleton; change the model by restarting
+  the MCP server.
+
+### Logs
+Structured logs are written to `data/logs/sortgs_mcp.log` with extra context
+like `session_id`, `paper_rank`, and `num_results`.
+See `TROUBLESHOOTING.md` for common issues and log-reading tips.
 
 ### Archive Workplans
 Use `archive_workplans.sh` to tar.gz a workplan folder and remove the original.
@@ -148,12 +196,6 @@ We use `pytest` for our test suite. To run all tests:
 ```bash
 # from repo root
 uv run pytest
-
-# or, after a pip editable install:
-pytest
-```
-```bash
-python -m pytest
 ```
 Ensure all tests pass before submitting a PR; GitHub Actions will also execute the test suite on each push.
 

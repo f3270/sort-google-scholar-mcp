@@ -8,13 +8,18 @@
 - Packaging metadata: `pyproject.toml`; environment setups: `requirements.txt`, `conda_environment.yml`.
 
 ## Build, Test, and Development Commands
-- Install in editable mode: `pip install -e .` (use Python ≥3.8).
+- Install in editable mode: `uv sync` (use Python ≥3.8).
 - Run the CLI locally: `sortgs "machine learning" --nresults 20 --csvpath ./out`.
 - Update demo CSVs: `python examples/update_examples.py`.
-- Test suite: `pytest -q`. Note: CLI tests hit archived web pages (Wayback) and require network access.
+- Test suite: `uv run pytest -q`. Note: CLI tests hit archived web pages (Wayback) and require network access.
 
 ## Coding Style & Naming
 - Follow PEP 8 with 4-space indentation; prefer f-strings and pathlib for paths.
+- Keep the project KISS and TDD (test-driven development).
+
+## Environment Usage
+- Run all commands (including tests) with `uv run ...` to use the project environment
+  and avoid touching the system Python.
 - Keep functions small; centralize logging via the module-level `logger` in `sortgs.py`.
 - CLI options should mirror argparse names (e.g., `--sortby`, `--langfilter`); new columns should use lowercase with separators like `cit/year`.
 - Avoid adding global state; pass explicit parameters into helpers where possible.
