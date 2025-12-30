@@ -39,8 +39,17 @@ build-backend = "hatchling.build"
 dev = [
     "pytest>=9.0.2",
     "pytest-asyncio>=1.3.0",
+    "pytest-cov>=6.0.0",
     "reportlab>=4.4.4",
 ]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+
+[tool.coverage.run]
+branch = true
+source = ["sortgs_mcp"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true

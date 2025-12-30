@@ -94,7 +94,7 @@ def parse_google_scholar_page(html_content: bytes) -> list[dict]:
 
         # Extract citations
         try:
-            paper["citations"] = get_citations(str(div.format_string))
+            paper["citations"] = get_citations(str(div))
         except Exception:
             paper["citations"] = 0
 
