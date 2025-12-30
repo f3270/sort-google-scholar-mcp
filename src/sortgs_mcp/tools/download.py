@@ -21,22 +21,73 @@ async def download_papers(
 ) -> dict:
     """Download PDFs for papers in a session."""
     if max_papers < 1:
-        raise ValueError("max_papers must be >= 1")
+        logger.error(
+            "Invalid max_papers in download_papers",
+            extra={"session_id": session_id, "max_papers": max_papers},
+        )
+        raise ValueError(
+            "max_papers must be >= 1. "
+            "Hint: Use a positive number like 5 or 10."
+        )
 
-    session = session_manager.load_session(session_id)
+    logger.info(
+        "download_papers called",
+        extra={
+            "session_id": session_id,
+            "max_papers": max_papers,
+            "paper_indices": paper_indices,
+        },
+    )
+
+    try:
+        session = session_manager.load_session(session_id)
+    except FileNotFoundError as exc:
+        logger.error(
+            "Session not found for download_papers",
+            extra={"session_id": session_id},
+        )
+        raise ValueError(
+            f"Session '{session_id}' not found. "
+            "Hint: Use list_sessions tool to see all sessions."
+        ) from exc
+
     papers_with_pdf = [paper for paper in session.papers if paper.pdf_url]
 
     if paper_indices:
+        logger.info(
+            "Filtering download_papers by indices",
+            extra={
+                "session_id": session_id,
+                "paper_indices": paper_indices,
+                "available_papers": len(papers_with_pdf),
+            },
+        )
         selected = []
         for idx in paper_indices:
             if idx < 0 or idx >= len(papers_with_pdf):
-                raise ValueError(f"paper_indices out of range: {idx}")
+                logger.error(
+                    "paper_indices out of range in download_papers",
+                    extra={
+                        "session_id": session_id,
+                        "paper_index": idx,
+                        "available_papers": len(papers_with_pdf),
+                    },
+                )
+                raise ValueError(
+                    f"paper_indices out of range: {idx}. "
+                    "Hint: Indices must be within the available PDF list."
+                )
             selected.append(papers_with_pdf[idx])
         papers_with_pdf = selected
 
     papers_with_pdf = papers_with_pdf[:max_papers]
+    paper_ranks = [paper.rank for paper in papers_with_pdf]
 
     if not papers_with_pdf:
+        logger.info(
+            "No PDFs available to download",
+            extra={"session_id": session_id, "available_papers": 0},
+        )
         result = PDFDownloadResult(
             session_id=session_id,
             downloaded=0,
@@ -48,15 +99,30 @@ async def download_papers(
     pdf_dir = settings.pdf_download_dir(session_id)
     project_root = Path.cwd()
 
-    async with PDFDownloader(
-        max_concurrent=settings.max_concurrent_downloads
-    ) as downloader:
-        result = await downloader.download_batch(
-            papers_with_pdf,
-            pdf_dir,
-            session_id,
-            project_root=project_root,
+    try:
+        async with PDFDownloader(
+            max_concurrent=settings.max_concurrent_downloads
+        ) as downloader:
+            result = await downloader.download_batch(
+                papers_with_pdf,
+                pdf_dir,
+                session_id,
+                project_root=project_root,
+            )
+    except Exception as exc:
+        logger.error(
+            "download_papers failed",
+            extra={
+                "session_id": session_id,
+                "max_papers": max_papers,
+                "paper_ranks": paper_ranks,
+            },
+            exc_info=True,
         )
+        raise RuntimeError(
+            "download_papers failed. "
+            "Hint: Check network connectivity or retry with fewer papers."
+        ) from exc
 
     session.pdfs_downloaded += result.downloaded
     session.download_metadata = result.download_metadata
@@ -69,6 +135,7 @@ async def download_papers(
             "downloaded": result.downloaded,
             "skipped": result.skipped,
             "failed": result.failed,
+            "paper_ranks": paper_ranks,
         },
     )
 

@@ -81,7 +81,9 @@ You can also use the example config at `examples/mcp_config.json`.
 
 6. `list_sessions`
    - Inputs: none
-   - Output: list of saved sessions with metadata
+   - Output: list of saved sessions with metadata:
+     `session_id`, `keywords`, `created_at`, `papers_count`, `pdfs_downloaded`,
+     `indexed`
 
 ### Performance Notes
 - Search uses an `httpx.AsyncClient` context manager for connection pooling.

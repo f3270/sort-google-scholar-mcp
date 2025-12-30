@@ -23,18 +23,44 @@ _PDF_RANK_PATTERN = re.compile(r"paper_(\d{3})_")
 def _validate_index_params(
     chunk_size: int, chunk_overlap: int, max_chunks: int
 ) -> None:
+    """Validate indexing settings for chunk sizes and limits."""
     if not 100 <= chunk_size <= 5000:
-        raise ValueError("chunk_size must be between 100 and 5000")
+        logger.error(
+            "Invalid chunk_size in index_papers",
+            extra={"chunk_size": chunk_size},
+        )
+        raise ValueError(
+            "chunk_size must be between 100 and 5000. "
+            "Hint: Try 1000 for general-purpose indexing."
+        )
     if chunk_overlap < 0 or chunk_overlap >= chunk_size:
-        raise ValueError("chunk_overlap must be >= 0 and < chunk_size")
+        logger.error(
+            "Invalid chunk_overlap in index_papers",
+            extra={"chunk_overlap": chunk_overlap, "chunk_size": chunk_size},
+        )
+        raise ValueError(
+            "chunk_overlap must be >= 0 and < chunk_size. "
+            "Hint: Try 200 for moderate overlap."
+        )
     if max_chunks < 100:
-        raise ValueError("max_chunks must be >= 100")
+        logger.error(
+            "Invalid max_chunks in index_papers",
+            extra={"max_chunks": max_chunks},
+        )
+        raise ValueError(
+            "max_chunks must be >= 100. "
+            "Hint: Use a higher limit for large sessions."
+        )
 
 
 def _find_paper_rank(pdf_path: Path) -> int:
+    """Extract the paper rank from a PDF filename."""
     match = _PDF_RANK_PATTERN.search(pdf_path.name)
     if not match:
-        raise ValueError(f"Unable to extract rank from {pdf_path.name}")
+        raise ValueError(
+            f"Unable to extract rank from {pdf_path.name}. "
+            "Hint: Expected filename format 'paper_###_*.pdf'."
+        )
     return int(match.group(1))
 
 
@@ -59,11 +85,38 @@ async def index_papers(
         resolved_chunk_size, resolved_chunk_overlap, resolved_max_chunks
     )
 
-    session = session_manager.load_session(session_id)
+    logger.info(
+        "index_papers called",
+        extra={
+            "session_id": session_id,
+            "chunk_size": resolved_chunk_size,
+            "chunk_overlap": resolved_chunk_overlap,
+            "max_chunks": resolved_max_chunks,
+        },
+    )
+
+    try:
+        session = session_manager.load_session(session_id)
+    except FileNotFoundError as exc:
+        logger.error(
+            "Session not found for index_papers",
+            extra={"session_id": session_id},
+        )
+        raise ValueError(
+            f"Session '{session_id}' not found. "
+            "Hint: Use list_sessions tool to see all sessions."
+        ) from exc
     pdf_dir = settings.pdf_download_dir(session_id)
     pdf_files = sorted(pdf_dir.glob("*.pdf"))
     if not pdf_files:
-        raise RuntimeError("No PDFs found. Run download_papers first.")
+        logger.error(
+            "No PDFs found for index_papers",
+            extra={"session_id": session_id, "pdf_dir": str(pdf_dir)},
+        )
+        raise RuntimeError(
+            "No PDFs found. Run download_papers first. "
+            "Hint: Use download_papers to fetch PDFs before indexing."
+        )
 
     paper_by_rank = {paper.rank: paper for paper in session.papers}
     all_chunks: list[dict] = []
@@ -73,12 +126,24 @@ async def index_papers(
 
     for pdf_path in pdf_files:
         paper = None
+        rank = None
         try:
             rank = _find_paper_rank(pdf_path)
             paper = paper_by_rank.get(rank)
             if paper is None:
-                raise ValueError(f"No paper found for rank {rank}")
+                raise ValueError(
+                    f"No paper found for rank {rank}. "
+                    "Hint: Ensure PDF filenames match the search session ranks."
+                )
 
+            logger.info(
+                "Indexing PDF",
+                extra={
+                    "session_id": session_id,
+                    "pdf_path": str(pdf_path),
+                    "paper_rank": rank,
+                },
+            )
             chunks = await asyncio.to_thread(
                 parse_and_chunk_pdf,
                 pdf_path,
@@ -93,11 +158,27 @@ async def index_papers(
 
             remaining = resolved_max_chunks - len(all_chunks)
             if remaining <= 0:
-                logger.warning("Reached max_chunks limit (%s)", resolved_max_chunks)
+                logger.warning(
+                    "Reached max_chunks limit",
+                    extra={
+                        "session_id": session_id,
+                        "max_chunks": resolved_max_chunks,
+                        "chunks_indexed": len(all_chunks),
+                        "paper_rank": rank,
+                    },
+                )
                 break
             if len(chunks) > remaining:
                 all_chunks.extend(chunks[:remaining])
-                logger.warning("Reached max_chunks limit (%s)", resolved_max_chunks)
+                logger.warning(
+                    "Reached max_chunks limit",
+                    extra={
+                        "session_id": session_id,
+                        "max_chunks": resolved_max_chunks,
+                        "chunks_indexed": len(all_chunks),
+                        "paper_rank": rank,
+                    },
+                )
                 papers_indexed += 1
                 break
 
@@ -105,7 +186,15 @@ async def index_papers(
             papers_indexed += 1
         except Exception as exc:
             name = paper.title if paper else pdf_path.name
-            logger.error("Failed to parse %s: %s", pdf_path.name, exc)
+            logger.error(
+                "Failed to parse PDF",
+                extra={
+                    "session_id": session_id,
+                    "pdf_path": str(pdf_path),
+                    "paper_rank": rank,
+                    "error": str(exc),
+                },
+            )
             failed_papers.append(name)
 
     embedder = get_embedding_service(settings.embedding_model)
@@ -132,6 +221,16 @@ async def index_papers(
     session_manager.save_session(session, create_empty_csv=False)
 
     elapsed = time.monotonic() - start_time
+    logger.info(
+        "index_papers completed",
+        extra={
+            "session_id": session_id,
+            "papers_indexed": papers_indexed,
+            "chunks_created": indexed_count,
+            "failed_papers": len(failed_papers),
+            "indexing_time_sec": round(elapsed, 2),
+        },
+    )
     result = IndexingResult(
         session_id=session_id,
         papers_indexed=papers_indexed,

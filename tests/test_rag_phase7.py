@@ -270,7 +270,7 @@ async def test_query_session_not_found(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "data_dir", tmp_path)
     monkeypatch.setattr(query_tool, "session_manager", SessionManager(tmp_path))
 
-    with pytest.raises(ValueError, match="Session missing not found"):
+    with pytest.raises(ValueError, match=r"Session 'missing' not found"):
         await query_tool.query_papers("Question", session_id="missing")
 
 

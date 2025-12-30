@@ -82,7 +82,7 @@ class SessionManager:
                     {
                         "session_id": session.session_id,
                         "keywords": session.params.keywords,
-                        "created_at": session.created_at,
+                        "created_at": session.created_at.isoformat(),
                         "papers_count": session.papers_count,
                         "pdfs_downloaded": session.pdfs_downloaded,
                         "indexed": session.indexed,

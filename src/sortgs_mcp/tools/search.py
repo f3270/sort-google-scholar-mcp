@@ -30,7 +30,10 @@ async def search_papers(
     """
     try:
         if not keywords.strip():
-            raise ValueError("keywords must not be empty")
+            raise ValueError(
+                "keywords must not be empty. "
+                "Hint: Provide a non-empty search string, e.g. 'machine learning'."
+            )
 
         logger.info(
             "search_papers called",
@@ -77,31 +80,54 @@ async def search_papers(
         }
 
     except ValueError as exc:
-        logger.error("Validation error in search_papers: %s", exc)
+        logger.error(
+            "Validation error in search_papers: %s",
+            exc,
+            extra={"keywords": keywords},
+        )
         raise ValueError(f"Invalid parameters: {exc}") from exc
     except httpx.HTTPError as exc:
-        logger.error("HTTP error during search: %s", exc)
+        logger.error(
+            "HTTP error during search: %s",
+            exc,
+            extra={"keywords": keywords},
+        )
         raise RuntimeError(
-            f"Failed to fetch results from Google Scholar: {exc}"
+            "Failed to fetch results from Google Scholar. "
+            "Hint: Use debug=True to rely on archived pages or retry later. "
+            f"Details: {exc}"
         ) from exc
     except Exception as exc:
-        logger.error("Unexpected error in search_papers: %s", exc, exc_info=True)
-        raise RuntimeError(f"Search failed: {exc}") from exc
+        logger.error(
+            "Unexpected error in search_papers: %s",
+            exc,
+            extra={"keywords": keywords},
+            exc_info=True,
+        )
+        raise RuntimeError(
+            f"Search failed: {exc}. Hint: Retry with fewer results."
+        ) from exc
 
 
 @mcp.tool()
 async def generate_search_keywords(query: str, num_variations: int = 3) -> dict:
     """Generate optimized Google Scholar search keywords using OpenAI."""
     if not query.strip():
-        raise ValueError("query must not be empty")
+        raise ValueError(
+            "query must not be empty. "
+            "Hint: Provide a short research topic or question."
+        )
 
     if not isinstance(num_variations, int) or not (1 <= num_variations <= 5):
-        raise ValueError("num_variations must be an integer between 1 and 5")
+        raise ValueError(
+            "num_variations must be an integer between 1 and 5. "
+            "Hint: Try 3 for a balanced set."
+        )
 
     if not settings.openai_api_key:
         raise RuntimeError(
             "OPENAI_API_KEY not configured. "
-            "Please set it in .env file to use keyword generation."
+            "Hint: Set it in .env to use keyword generation."
         )
 
     logger.info(
@@ -115,5 +141,8 @@ async def generate_search_keywords(query: str, num_variations: int = 3) -> dict:
     )
     keywords = await client.generate_keywords(query, num_variations)
 
-    logger.info("Generated %s keywords successfully", len(keywords))
+    logger.info(
+        "Generated keywords successfully",
+        extra={"keyword_count": len(keywords)},
+    )
     return {"keywords": keywords}

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "sortgs": {
+      "command": "python",
+      "args": ["-m", "sortgs_mcp.server"],
+      "env": {
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "DATA_DIR": "${HOME}/.sortgs/data",
+        "LOG_LEVEL": "INFO"
+      }
+    }
+  }
+}

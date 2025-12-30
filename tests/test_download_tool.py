@@ -134,7 +134,7 @@ def test_download_papers_invalid_session(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "data_dir", tmp_path)
     monkeypatch.setattr(download_tool, "session_manager", SessionManager(tmp_path))
 
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ValueError, match="Hint:"):
         asyncio.run(download_tool.download_papers("missing-session"))
 
 
