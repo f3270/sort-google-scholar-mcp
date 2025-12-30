@@ -61,16 +61,59 @@ class OpenAIClient:
 
         content = response.choices[0].message.content or ""
         keywords = parse_keyword_response(content)
-        self._log_usage(response.usage)
+        self._log_usage(response.usage, label="OpenAI keyword generation usage")
         return keywords
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+        retry=retry_if_exception(_is_retryable_exception),
+        reraise=True,
+    )
     async def generate_answer(self, question: str, context: str) -> str:
-        """Generate an answer from context (stub for Phase 7)."""
-        raise NotImplementedError(
-            "RAG answer generation will be implemented in Phase 7"
+        """Generate an academic answer based only on the provided context."""
+        max_context_chars = 6000
+        trimmed_context = context
+        if len(context) > max_context_chars:
+            trimmed_context = context[:max_context_chars]
+            logger.warning(
+                "Truncated RAG context from %s to %s chars",
+                len(context),
+                max_context_chars,
+            )
+
+        prompt = (
+            "You are an academic assistant. Answer the question based ONLY on the "
+            "context below. If the context does not contain the answer, say "
+            '"No relevant information found in indexed papers." '
+            "Cite sources inline using academic style like "
+            '"(Author et al., Year)".\n\n'
+            "Context:\n"
+            f"{trimmed_context}\n\n"
+            "Question:\n"
+            f"{question}\n\n"
+            "Answer:"
         )
 
-    def _log_usage(self, usage) -> None:
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2,
+                max_tokens=500,
+            )
+        except AuthenticationError as exc:
+            logger.error("OpenAI authentication failed: %s", exc, exc_info=True)
+            raise
+        except (RateLimitError, APIConnectionError, APIError) as exc:
+            logger.error("OpenAI API error: %s", exc, exc_info=True)
+            raise
+
+        content = response.choices[0].message.content or ""
+        self._log_usage(response.usage, label="OpenAI answer generation usage")
+        return content.strip()
+
+    def _log_usage(self, usage, *, label: str = "OpenAI usage") -> None:
         if not usage:
             return
         prompt_tokens = getattr(usage, "prompt_tokens", None)
@@ -87,4 +130,4 @@ class OpenAIClient:
         )
         message = ", ".join(part for part in parts if part)
         if message:
-            logger.info("OpenAI keyword generation usage: %s", message)
+            logger.info("%s: %s", label, message)

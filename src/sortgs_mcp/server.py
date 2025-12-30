@@ -64,6 +64,7 @@ def main() -> None:
         download,
     )  # noqa: F401  # Registers tools via decorators
     from sortgs_mcp.tools import index  # noqa: F401  # Registers tools via decorators
+    from sortgs_mcp.tools import query  # noqa: F401  # Registers tools via decorators
 
     logger.info("Starting Sort Google Scholar MCP Server")
     if settings.openai_api_key is None:
