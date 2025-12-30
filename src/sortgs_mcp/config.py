@@ -47,6 +47,11 @@ class Settings(BaseSettings):
         default="all-mpnet-base-v2",
         description="Sentence-transformers model for embeddings",
     )
+    embedding_batch_size: int = Field(
+        default=1000,
+        ge=1,
+        description="Sub-batch size for embedding generation",
+    )
 
     # LLM configuration
     openai_model_keywords: str = Field(
@@ -75,6 +80,11 @@ class Settings(BaseSettings):
     chunk_overlap: int = Field(
         default=200,
         description="Default overlap between chunks",
+    )
+    max_chunks_per_session: int = Field(
+        default=10000,
+        ge=100,
+        description="Maximum chunks to index per session",
     )
 
     # Logging
