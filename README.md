@@ -4,18 +4,46 @@
 
 [![PyPI Version](https://img.shields.io/pypi/v/sortgs.svg)](https://pypi.org/project/sortgs/)
 
-sortgs is a Python tool for ranking Google Scholar publications by the number of citations. It is useful for finding relevant papers in a specific field. The data acquired from Google Scholar includes Title, Citations, Links, Rank, and a new column with the number of citations per year. In the background, it first try to fetch results using python requests. If it fails, it will use selenium to fetch the results. 
+sortgs is a Python tool for ranking Google Scholar publications by the number of citations. It is useful for finding relevant papers in a specific field. The data acquired from Google Scholar includes Title, Citations, Links, Rank, and a new column with the number of citations per year. In the background, it first tries to fetch results using python requests. If it fails, it will use selenium to fetch the results.
 
-## 🚀 Run it on Google Colab
-- **No-Code Version (new!)**:  [<img src="https://colab.research.google.com/assets/colab-badge.svg" align="center">](https://colab.research.google.com/github/WittmannF/sort-google-scholar/blob/master/examples/Sort_Google_Scholar_No_Code_Version.ipynb)  — *No coding required! Perfect for a quick start!* ⚡  
-- **Code Version:** [<img src="https://colab.research.google.com/assets/colab-badge.svg" align="center">](https://colab.research.google.com/github/WittmannF/sort-google-scholar/blob/master/examples/run_sortgs_on_colab.ipynb)— *For developers who want full control of what's behind the scenes!* 💻
+This repo now also contains an MCP server that turns the CLI into a tool-driven research pipeline: search papers, download PDFs, parse + chunk PDFs for RAG, index into ChromaDB, and answer questions using OpenAI. The MCP plan and architecture are documented in `MCP_PLAN.md`.
 
-> 💡 **All you need** is a Google Account to get started.  
-> ⚠️ **Note**: Google Scholar may block access after too many repetitive requests due to CAPTCHA checks, so proceed mindfully!
+## Project Intent (MCP)
+The MCP server (`sortgs-mcp`) is intended to:
+- Provide tool-based access to search, download, and inspect Google Scholar results.
+- Build a local PDF corpus for a search session.
+- Parse and chunk PDFs for RAG indexing (PyMuPDF + text splitters).
+- Index chunks in a local vector store (ChromaDB).
+- Answer questions using OpenAI over the indexed corpus.
 
-## 📚 Colab No-Code Instructions
-https://github.com/user-attachments/assets/25de7bad-2a5d-4bcf-b486-faa1d7a29eb3
+High-level flow:
+1. Generate keyword variations (OpenAI).
+2. Search Google Scholar and create a session.
+3. Download PDFs for the session.
+4. Parse and chunk PDFs.
+5. Index chunks in ChromaDB.
+6. Query the corpus with RAG.
 
+### MCP Server Setup (Quick)
+```bash
+# Install dev deps
+uv sync
+
+# Configure OpenAI (required for keyword generation and RAG)
+cp .env.example .env
+# edit .env to add OPENAI_API_KEY
+
+# Run MCP server
+uv run sortgs-mcp
+```
+
+### MCP Tools (Planned / In Progress)
+- `generate_search_keywords`
+- `search_papers`
+- `download_papers`
+- `index_papers`
+- `query_papers`
+- `list_sessions`
 
 ## Installation
 
@@ -42,45 +70,6 @@ sortgs "your keyword"
 ```
 
 Replace `"your keyword"` with any keyword you'd like to search for. A CSV file with the name `your_keyword.csv` will be created in your current directory.
-
-## Misc
-For a feedback, send me an email: fernando [dot] wittmann [at] gmail [dot] com
-
-### Command Line Arguments
-
-```bash
-usage: sortgs [-h] [--sortby SORTBY] [--nresults NRESULTS] [--csvpath CSVPATH]
-              [--notsavecsv] [--plotresults] [--startyear STARTYEAR]
-              [--endyear ENDYEAR] [--debug] kw
-
-positional arguments:
-  kw                    Keyword to be searched. Use double quote followed by
-                        simple quote for an exact keyword. 
-                        Example: sortgs "'exact keyword'"
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --sortby SORTBY       Column to be sorted by. Default is "Citations". To sort
-                        by citations per year, use --sortby "cit/year"
-  --langfilter LANGFILTER [LANGFILTER ...]
-                        Only languages listed are permitted to pass the filter. 
-                        List of supported language codes: zh-CN, zh-TW, nl, en, fr,
-                        de, it, ja, ko, pl, pt, es, tr
-  --nresults NRESULTS   Number of articles to search on Google Scholar. Default
-                        is 100. (careful with robot checking if value is high)
-  --csvpath CSVPATH     Path to save the exported csv file. Default is the 
-                        current folder
-  --notsavecsv          By default, results are exported to a csv file. Select
-                        this option to just print results but not store them
-  --plotresults         Use this flag to plot results with the original rank on
-                        the x-axis and the number of citations on the y-axis.
-                        Default is False
-  --startyear STARTYEAR
-                        Start year when searching. Default is None
-  --endyear ENDYEAR     End year when searching. Default is current year
-  --debug               Debug mode. Used for unit testing. It will get pages
-                        stored on web archive
-```
 
 ### Examples
 
@@ -137,67 +126,6 @@ Loading next 20 results
 ...
 ```
 
-## Step-by-Step Installation
-1. Install Python 3 (>=3.8).
-2. **Recommended:** From the repo, run `uv sync` to install dependencies into a local `.venv`.
-3. Run the CLI with `uv run sortgs "your keyword"` (replace `"your keyword"` as needed).
-4. Alternatively, install from PyPI with `pip install sortgs` and then run `sortgs "your keyword"`.
-5. A CSV file with the name `your_keyword.csv` should be created.
-
-If those steps are too complicated for you, send me an email with a list of keyworks that you'd like them ranked to: fernando [dot] wittmann [at] gmail [dot] com
-
-## Conda Environment Setup
-
-### Creating the Environment
-```
-conda env create -f conda_environment.yml
-```
-
-### Reset the environment
-```
-conda deactivate
-conda remove --name sortgs --all
-conda env create -f environment.yml
-```
-
-### Activate the environment
-```
-conda activate sortgs
-```
-
-## Running Project Using Docker
-
-This guide will walk you through the process of installing Docker, pulling the `fernandowittmann/sort-google-scholar` Docker image, and running the project.
-
-### Step 1: Install Docker
-
-#### Windows or Mac
-
-1. **Download Docker Desktop**: Go to the [Docker Desktop website](https://www.docker.com/products/docker-desktop) and download the appropriate installer for your operating system.
-2. **Install Docker Desktop**: Run the installer and follow the on-screen instructions.
-3. **Verify Installation**: Open a terminal (or command prompt on Windows) and run `docker --version` to verify that Docker has been installed successfully.
-
-#### Linux
-
-1. **Update Package Index**: Run `sudo apt-get update` to update your package index.
-2. **Install Docker**: Run `sudo apt-get install docker-ce docker-ce-cli containerd.io` to install Docker.
-3. **Start Docker**: Run `sudo systemctl start docker` to start the Docker daemon.
-4. **Verify Installation**: Run `docker --version` to ensure Docker is installed correctly.
-
-### Step 2: Pull the Docker Image
-
-1. **Pull Image**: Run the following command to pull the `fernandowittmann/sort-google-scholar` image from Docker Hub:
-
-   ```bash
-   docker pull fernandowittmann/sort-google-scholar
-   ```
-
-### Step 3: Run the Project
-
-1. **Run the Docker Container**: Use the following command to run the container:
-
-   ```bash
-   docker run -v "$PWD/sortgs-results:/app" fernandowittmann/sort-google-scholar "machine learning" 
    ```
 
    Replace `$PWD` with the absolute path to your results directory if you are not in the parent directory of `sortgs-results`.
