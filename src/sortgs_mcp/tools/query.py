@@ -75,18 +75,14 @@ async def query_papers(
             extra={"session_id": session_id, "question_length": len(question)},
         )
         raise ValueError(
-            "question must not be empty. "
-            "Hint: Provide a short research question."
+            "question must not be empty. " "Hint: Provide a short research question."
         )
     if top_k < 1:
         logger.error(
             "Invalid top_k in query_papers",
             extra={"session_id": session_id, "top_k": top_k},
         )
-        raise ValueError(
-            "top_k must be >= 1. "
-            "Hint: Use 3-5 for concise answers."
-        )
+        raise ValueError("top_k must be >= 1. " "Hint: Use 3-5 for concise answers.")
     if session_id is None:
         logger.error(
             "Missing session_id in query_papers",
@@ -124,8 +120,7 @@ async def query_papers(
             extra={"session_id": session_id},
         )
         raise RuntimeError(
-            f"Session '{session_id}' not indexed. "
-            "Hint: Run index_papers first."
+            f"Session '{session_id}' not indexed. " "Hint: Run index_papers first."
         )
 
     retriever = RAGRetriever(

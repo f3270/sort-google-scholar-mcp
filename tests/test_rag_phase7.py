@@ -22,7 +22,9 @@ class FakeResponse:
     def __init__(self, content: str) -> None:
         self.choices = [FakeChoice(content)]
         self.usage = type(
-            "Usage", (), {"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30}
+            "Usage",
+            (),
+            {"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30},
         )
 
 
@@ -207,12 +209,20 @@ async def test_sources_consistency_order():
     hits = [
         {
             "text": "First chunk.",
-            "metadata": {"paper_title": "Paper A", "paper_authors": "A", "paper_year": 2020},
+            "metadata": {
+                "paper_title": "Paper A",
+                "paper_authors": "A",
+                "paper_year": 2020,
+            },
             "distance": 0.1,
         },
         {
             "text": "Second chunk.",
-            "metadata": {"paper_title": "Paper B", "paper_authors": "B", "paper_year": 2019},
+            "metadata": {
+                "paper_title": "Paper B",
+                "paper_authors": "B",
+                "paper_year": 2019,
+            },
             "distance": 0.2,
         },
     ]

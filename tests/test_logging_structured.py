@@ -271,9 +271,7 @@ def test_query_and_list_sessions_logging(tmp_path, monkeypatch, caplog):
 
     caplog.set_level(logging.INFO)
     asyncio.run(
-        query_tool.query_papers(
-            "What is RAG?", session_id="session-2", top_k=2
-        )
+        query_tool.query_papers("What is RAG?", session_id="session-2", top_k=2)
     )
     asyncio.run(query_tool.list_sessions())
 

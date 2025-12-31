@@ -29,7 +29,9 @@ def _make_paper(rank: int, title: str, pdf_url: str | None = None) -> Paper:
     )
 
 
-def _create_session(tmp_path: Path, indexed: bool = False) -> tuple[str, SessionManager]:
+def _create_session(
+    tmp_path: Path, indexed: bool = False
+) -> tuple[str, SessionManager]:
     params = SearchParams(
         keywords="test",
         num_results=10,

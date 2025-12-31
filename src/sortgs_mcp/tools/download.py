@@ -26,8 +26,7 @@ async def download_papers(
             extra={"session_id": session_id, "max_papers": max_papers},
         )
         raise ValueError(
-            "max_papers must be >= 1. "
-            "Hint: Use a positive number like 5 or 10."
+            "max_papers must be >= 1. " "Hint: Use a positive number like 5 or 10."
         )
 
     logger.info(

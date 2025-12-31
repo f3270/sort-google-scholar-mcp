@@ -48,8 +48,7 @@ def _validate_index_params(
             extra={"max_chunks": max_chunks},
         )
         raise ValueError(
-            "max_chunks must be >= 100. "
-            "Hint: Use a higher limit for large sessions."
+            "max_chunks must be >= 100. " "Hint: Use a higher limit for large sessions."
         )
 
 
@@ -72,9 +71,7 @@ async def index_papers(
     max_chunks: int | None = None,
 ) -> dict:
     """Index PDFs from a session into ChromaDB."""
-    resolved_chunk_size = (
-        settings.chunk_size if chunk_size is None else chunk_size
-    )
+    resolved_chunk_size = settings.chunk_size if chunk_size is None else chunk_size
     resolved_chunk_overlap = (
         settings.chunk_overlap if chunk_overlap is None else chunk_overlap
     )

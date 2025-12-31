@@ -27,9 +27,7 @@ def reset_singleton():
 
 def test_singleton_pattern(monkeypatch):
     model = FakeModel(dim=3)
-    monkeypatch.setattr(
-        embeddings_module, "SentenceTransformer", lambda name: model
-    )
+    monkeypatch.setattr(embeddings_module, "SentenceTransformer", lambda name: model)
 
     service1 = embeddings_module.get_embedding_service("fake-model")
     service2 = embeddings_module.get_embedding_service("fake-model")
@@ -39,9 +37,7 @@ def test_singleton_pattern(monkeypatch):
 
 def test_embed_single_dimensions(monkeypatch):
     model = FakeModel(dim=4)
-    monkeypatch.setattr(
-        embeddings_module, "SentenceTransformer", lambda name: model
-    )
+    monkeypatch.setattr(embeddings_module, "SentenceTransformer", lambda name: model)
 
     service = embeddings_module.get_embedding_service("fake-model")
     embedding = service.embed_single("hello")
@@ -50,9 +46,7 @@ def test_embed_single_dimensions(monkeypatch):
 
 def test_embed_batch(monkeypatch):
     model = FakeModel(dim=5)
-    monkeypatch.setattr(
-        embeddings_module, "SentenceTransformer", lambda name: model
-    )
+    monkeypatch.setattr(embeddings_module, "SentenceTransformer", lambda name: model)
 
     service = embeddings_module.get_embedding_service("fake-model")
     embeddings = service.embed_texts(["a", "bb", "ccc"])
@@ -61,9 +55,7 @@ def test_embed_batch(monkeypatch):
 
 def test_sub_batching(monkeypatch):
     model = FakeModel(dim=2)
-    monkeypatch.setattr(
-        embeddings_module, "SentenceTransformer", lambda name: model
-    )
+    monkeypatch.setattr(embeddings_module, "SentenceTransformer", lambda name: model)
 
     service = embeddings_module.get_embedding_service("fake-model")
     texts = ["text"] * 2500
@@ -75,9 +67,7 @@ def test_sub_batching(monkeypatch):
 
 def test_deterministic(monkeypatch):
     model = FakeModel(dim=3)
-    monkeypatch.setattr(
-        embeddings_module, "SentenceTransformer", lambda name: model
-    )
+    monkeypatch.setattr(embeddings_module, "SentenceTransformer", lambda name: model)
 
     service = embeddings_module.get_embedding_service("fake-model")
     embeddings = service.embed_texts(["same", "same"])
@@ -86,9 +76,7 @@ def test_deterministic(monkeypatch):
 
 def test_invalid_batch_size(monkeypatch):
     model = FakeModel(dim=3)
-    monkeypatch.setattr(
-        embeddings_module, "SentenceTransformer", lambda name: model
-    )
+    monkeypatch.setattr(embeddings_module, "SentenceTransformer", lambda name: model)
 
     service = embeddings_module.get_embedding_service("fake-model")
     with pytest.raises(ValueError, match="batch_size must be >= 1"):

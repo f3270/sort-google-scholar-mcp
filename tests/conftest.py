@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime
 from pathlib import Path
-import uuid
 
 import pytest
 
@@ -95,9 +95,7 @@ def sample_session(
 @pytest.fixture
 def scholar_html_fixture() -> bytes:
     """Load scholar page HTML fixture as bytes."""
-    fixture_path = (
-        Path(__file__).parent / "fixtures" / "scholar_page.html"
-    )
+    fixture_path = Path(__file__).parent / "fixtures" / "scholar_page.html"
     return fixture_path.read_text(encoding="utf-8").encode("utf-8")
 
 

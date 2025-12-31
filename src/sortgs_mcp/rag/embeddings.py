@@ -38,9 +38,7 @@ class EmbeddingService:
         all_embeddings: list[list[float]] = []
         total_batches = (len(texts) + batch_size - 1) // batch_size
 
-        for batch_index, start in enumerate(
-            range(0, len(texts), batch_size), start=1
-        ):
+        for batch_index, start in enumerate(range(0, len(texts), batch_size), start=1):
             batch = texts[start : start + batch_size]
             batch_embeddings = self._model.encode(batch, show_progress_bar=False)
             if hasattr(batch_embeddings, "tolist"):

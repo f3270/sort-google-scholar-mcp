@@ -171,9 +171,7 @@ async def test_full_workflow_with_isolation(
             }
         ]
 
-    monkeypatch.setattr(
-        index_tool, "parse_and_chunk_pdf", fake_parse_and_chunk_pdf
-    )
+    monkeypatch.setattr(index_tool, "parse_and_chunk_pdf", fake_parse_and_chunk_pdf)
 
     index_response = await index_tool.index_papers(session_id=session_id)
     assert index_response["papers_indexed"] == 2

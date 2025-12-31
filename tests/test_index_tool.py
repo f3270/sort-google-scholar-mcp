@@ -79,7 +79,9 @@ class FakeEmbedder:
     def model_name(self) -> str:
         return "fake-model"
 
-    def embed_texts(self, texts: list[str], batch_size: int = 1000) -> list[list[float]]:
+    def embed_texts(
+        self, texts: list[str], batch_size: int = 1000
+    ) -> list[list[float]]:
         self.embed_texts_calls.append((len(texts), batch_size))
         for i in range(0, len(texts), batch_size):
             self.batches_processed.append(len(texts[i : i + batch_size]))
@@ -98,7 +100,9 @@ class FakeVectorStore:
         self.embedding_dim = embedding_dim
         self.add_documents_calls: list[tuple[str, int]] = []
 
-    def add_documents(self, session_id: str, chunks: list[dict], embeddings: list[list[float]]) -> int:
+    def add_documents(
+        self, session_id: str, chunks: list[dict], embeddings: list[list[float]]
+    ) -> int:
         if embeddings and len(embeddings[0]) != self.embedding_dim:
             raise ValueError(
                 f"Expected {self.embedding_dim} dims, got {len(embeddings[0])}"
@@ -129,8 +133,12 @@ def test_index_papers_basic(tmp_path, monkeypatch):
     def fake_chunker(pdf_path, paper, session_id, chunk_size, chunk_overlap):
         return make_chunks(session_id, paper, 2)
 
-    monkeypatch.setattr(index_tool, "get_embedding_service", lambda model: fake_embedder)
-    monkeypatch.setattr(index_tool, "VectorStore", lambda *args, **kwargs: fake_vectorstore)
+    monkeypatch.setattr(
+        index_tool, "get_embedding_service", lambda model: fake_embedder
+    )
+    monkeypatch.setattr(
+        index_tool, "VectorStore", lambda *args, **kwargs: fake_vectorstore
+    )
     monkeypatch.setattr(index_tool, "parse_and_chunk_pdf", fake_chunker)
 
     response = asyncio.run(index_tool.index_papers(session_id, max_chunks=1000))
@@ -161,8 +169,12 @@ def test_index_papers_partial_failure(tmp_path, monkeypatch):
             return None
         return make_chunks(session_id, paper, 1)
 
-    monkeypatch.setattr(index_tool, "get_embedding_service", lambda model: fake_embedder)
-    monkeypatch.setattr(index_tool, "VectorStore", lambda *args, **kwargs: fake_vectorstore)
+    monkeypatch.setattr(
+        index_tool, "get_embedding_service", lambda model: fake_embedder
+    )
+    monkeypatch.setattr(
+        index_tool, "VectorStore", lambda *args, **kwargs: fake_vectorstore
+    )
     monkeypatch.setattr(index_tool, "parse_and_chunk_pdf", fake_chunker)
 
     response = asyncio.run(index_tool.index_papers(session_id, max_chunks=1000))
@@ -181,8 +193,12 @@ def test_index_papers_max_chunks(tmp_path, monkeypatch):
     def fake_chunker(pdf_path, paper, session_id, chunk_size, chunk_overlap):
         return make_chunks(session_id, paper, 6000)
 
-    monkeypatch.setattr(index_tool, "get_embedding_service", lambda model: fake_embedder)
-    monkeypatch.setattr(index_tool, "VectorStore", lambda *args, **kwargs: fake_vectorstore)
+    monkeypatch.setattr(
+        index_tool, "get_embedding_service", lambda model: fake_embedder
+    )
+    monkeypatch.setattr(
+        index_tool, "VectorStore", lambda *args, **kwargs: fake_vectorstore
+    )
     monkeypatch.setattr(index_tool, "parse_and_chunk_pdf", fake_chunker)
 
     response = asyncio.run(index_tool.index_papers(session_id, max_chunks=10000))
@@ -209,8 +225,12 @@ def test_dimension_mismatch_error(tmp_path, monkeypatch):
     def fake_chunker(pdf_path, paper, session_id, chunk_size, chunk_overlap):
         return make_chunks(session_id, paper, 1)
 
-    monkeypatch.setattr(index_tool, "get_embedding_service", lambda model: fake_embedder)
-    monkeypatch.setattr(index_tool, "VectorStore", lambda *args, **kwargs: fake_vectorstore)
+    monkeypatch.setattr(
+        index_tool, "get_embedding_service", lambda model: fake_embedder
+    )
+    monkeypatch.setattr(
+        index_tool, "VectorStore", lambda *args, **kwargs: fake_vectorstore
+    )
     monkeypatch.setattr(index_tool, "parse_and_chunk_pdf", fake_chunker)
 
     with pytest.raises(ValueError, match="Expected 3 dims, got 2"):

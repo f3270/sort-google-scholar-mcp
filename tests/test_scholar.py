@@ -33,9 +33,7 @@ def test_build_url_with_years():
 
 
 def test_build_url_with_languages():
-    params = SearchParams(
-        keywords="test", num_results=10, languages=["en", "es"]
-    )
+    params = SearchParams(keywords="test", num_results=10, languages=["en", "es"])
     url = ScholarSearcher().build_url(params)
     assert "lr=lang_en%7Clang_es" in url
 
@@ -79,6 +77,7 @@ async def test_fetch_page_robot_detection(monkeypatch):
 @pytest.mark.asyncio
 async def test_fetch_page_http_error_debug(monkeypatch):
     monkeypatch.setattr(asyncio, "sleep", AsyncMock())
+
     async def _raise(*args, **kwargs):
         raise httpx.HTTPError("timeout")
 
@@ -191,10 +190,7 @@ async def test_search_pagination_multiple_pages(monkeypatch):
     def fake_parser(html):
         call_count["count"] += 1
         base = (call_count["count"] - 1) * 10
-        return [
-            _make_result(base + idx + 1, 10 - idx, 2020)
-            for idx in range(10)
-        ]
+        return [_make_result(base + idx + 1, 10 - idx, 2020) for idx in range(10)]
 
     monkeypatch.setattr(scholar_module, "parse_google_scholar_page", fake_parser)
 

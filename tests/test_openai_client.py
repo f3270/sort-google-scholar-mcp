@@ -9,9 +9,7 @@ from sortgs_mcp.llm.openai import OpenAIClient, _is_retryable_exception
 
 class FakeChat:
     def __init__(self, response):
-        self.completions = SimpleNamespace(
-            create=AsyncMock(return_value=response)
-        )
+        self.completions = SimpleNamespace(create=AsyncMock(return_value=response))
 
 
 class FakeClient:
@@ -22,9 +20,7 @@ class FakeClient:
 def _make_response(content: str):
     return SimpleNamespace(
         choices=[SimpleNamespace(message=SimpleNamespace(content=content))],
-        usage=SimpleNamespace(
-            prompt_tokens=10, completion_tokens=5, total_tokens=15
-        ),
+        usage=SimpleNamespace(prompt_tokens=10, completion_tokens=5, total_tokens=15),
     )
 
 
